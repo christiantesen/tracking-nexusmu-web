@@ -51,21 +51,18 @@ const classImages = ref<{ [key: string]: string }>({});
 const familyImages = ref<{ [key: string]: string }>({});
 const classImage = ref<string>(''); // Imagen de clase
 const familyImage = ref<string>(''); // Imagen de familia
-  const connectionStatus = ref<'connecting' | 'connected' | 'error' | 'fallback'>('connecting');
+const connectionStatus = ref<'connecting' | 'connected' | 'error' | 'fallback'>('connecting');
 let socket: WebSocket | null = null;
-let reconnectTimeout: number | null = null;
+let reconnectTimeout: any = null; // Change to 'any' for compatibility
+let fallbackTimeout: any = null; // Change to 'any' for compatibility
 let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 3;
+const FALLBACK_DURATION = 30000; // Duration before fallback to mock data in ms
 
 const mockCharacters: Character[] = [
   // ... (keep the existing mock data)
 ];
 
 const fetchData = () => {
-  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    handleFallback();
-    return;
-  }
   isLoading.value = true;
   // Crear una nueva conexión WebSocket
   connectionStatus.value = 'connecting';
@@ -77,6 +74,10 @@ const fetchData = () => {
     connectionStatus.value = 'connected';
     reconnectAttempts = 0;
     errorMessage.value = null;
+    if (fallbackTimeout) {
+      clearTimeout(fallbackTimeout); // Clear fallback timeout on success
+      fallbackTimeout = null;
+    }
   };
 
   // Evento que se ejecuta cuando se recibe un mensaje desde el WebSocket
@@ -115,9 +116,7 @@ const fetchData = () => {
   // Evento que se ejecuta cuando la conexión WebSocket se cierra
   socket.onclose = () => {
     console.log('WebSocket connection closed');
-    if (connectionStatus.value !== 'fallback') {
-      handleConnectionError();
-    }
+    handleConnectionError();
     isLoading.value = false;
   };
 };
@@ -331,11 +330,13 @@ const preloadImages = async () => {
 const handleConnectionError = () => {
   connectionStatus.value = 'error';
   reconnectAttempts++;
-  
-  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-    handleFallback();
-  } else {
-    scheduleReconnect();
+  scheduleReconnect(); // Always schedule reconnect regardless of attempts
+
+  // Schedule fallback to mock data after a certain duration if still disconnected
+  if (!fallbackTimeout) {
+    fallbackTimeout = setTimeout(() => {
+      handleFallback();
+    }, FALLBACK_DURATION);
   }
 };
 
@@ -346,13 +347,17 @@ const handleFallback = () => {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
   }
+  if (fallbackTimeout) {
+    clearTimeout(fallbackTimeout); // Clear fallback timeout if called
+    fallbackTimeout = null;
+  }
 };
 
 const scheduleReconnect = () => {
   if (!reconnectTimeout) {
     reconnectTimeout = setTimeout(() => {
-      fetchData();
-    }, 5000) as unknown as number;
+      fetchData(); // Attempt to reconnect
+    }, 5000) as any; // Try reconnecting every 5 seconds
   }
 };
 
@@ -362,10 +367,13 @@ onMounted(() => {
 
 onUnmounted(() => {
   if (socket) {
-    socket.close();
+    socket.close(); // Close socket on unmount
   }
   if (reconnectTimeout) {
-    clearTimeout(reconnectTimeout);
+    clearTimeout(reconnectTimeout); // Clear reconnect timeout
+  }
+  if (fallbackTimeout) {
+    clearTimeout(fallbackTimeout); // Clear fallback timeout
   }
 });
 </script>
