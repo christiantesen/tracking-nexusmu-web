@@ -48,6 +48,10 @@ const selectedClass = ref('');
 const selectedFamily = ref('');
 const selectedGuild = ref('');
 const isLoading = ref(false);
+const classImages = ref<{ [key: string]: string }>({});
+const familyImages = ref<{ [key: string]: string }>({});
+const classImage = ref<string>(''); // Imagen de clase
+const familyImage = ref<string>(''); // Imagen de familia
 
 const fetchData = async () => {
   isLoading.value = true;
@@ -55,9 +59,6 @@ const fetchData = async () => {
     const response = await axios.get(
       'https://tracking-nexusmu.onrender.com/scrape/'
     );
-
-    // Agrega este console.log para verificar la respuesta
-    console.log('Response from API:', response);
 
     const data = response.data;
     characters.value = Object.entries(data).map(
@@ -79,12 +80,143 @@ const fetchData = async () => {
   }
 };
 
-const openModal = (character: Character) => {
+const openModal = async (character: Character) => {
   selectedCharacter.value = character;
+  classImage.value = await getClassImage(character['Información del Personaje'].Clase);
+  familyImage.value = await getFamilyImage(character['Información Gens'].Familia);
 };
 
 const closeModal = () => {
   selectedCharacter.value = null;
+  classImage.value = '';
+  familyImage.value = '';
+};
+
+const getFamilyImage = async (family: string) => {
+  if (family === 'Vanert') {
+    console.log('Vanert');
+    return (await import('@/assets/vanert.png')).default; // Carga dinámica
+  } else if (family === 'Duprian') {
+    console.log('Duprian');
+    return (await import('@/assets/duprian.png')).default; // Carga dinámica
+  }
+  return '';
+};
+
+const getClassImage = async (className: string) => {
+  // Clases de 1ª, 2ª, 3ª y 4ª
+  if (
+    className === 'Dark Knight' ||
+    className === 'Blade Knight' ||
+    className === 'Blade Master' ||
+    className === 'Dragon Knight' ||
+    className === 'Ignition Knight'
+  ) {
+    return (await import('@/assets/dark_knight.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Dark Wizard' ||
+    className === 'Soul Master' ||
+    className === 'Grand Master' ||
+    className === 'Soul Wizard' ||
+    className === 'Darkness Wizard'
+  ) {
+    return (await import('@/assets/dark_wizard.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Fairy Elf' ||
+    className === 'Muse Elf' ||
+    className === 'High Elf' ||
+    className === 'Noble Elf' ||
+    className === 'Royal Elf'
+  ) {
+    return (await import('@/assets/fairy_elf.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Magic Gladiator' ||
+    className === 'Duel Master' ||
+    className === 'Magic Knight' ||
+    className === 'Duple Knight'
+  ) {
+    return (await import('@/assets/magic_knight.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Dark Lord' ||
+    className === 'Lord Emperor' ||
+    className === 'Dark Emperor' ||
+    className === 'Empire Lord' ||
+    className === 'Force Emperor'
+  ) {
+    return (await import('@/assets/dark_lord.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Summoner' ||
+    className === 'Bloody Summoner' ||
+    className === 'Dimension Summoner' ||
+    className === 'Endless Summoner'
+  ) {
+    return (await import('@/assets/summoner.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Rage Fighter' ||
+    className === 'Fist Master' ||
+    className === 'Fist Blazer' ||
+    className === 'Bloody Fighter'
+  ) {
+    return (await import('@/assets/rage_fighter.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Grow Lancer' ||
+    className === 'Mirage Lancer' ||
+    className === 'Shining Lancer' ||
+    className === 'Arcane Lancer'
+  ) {
+    return (await import('@/assets/arcane_lancer.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Rune Mage' ||
+    className === 'Rune Spell Master' ||
+    className === 'Grand Rune Master' ||
+    className === 'Majestic Rune Wizard' ||
+    className === 'Infinity Rune Wizard'
+  ) {
+    return (await import('@/assets/infinity_rune_wizard.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Slayer' ||
+    className === 'Royal Slayer' ||
+    className === 'Master Slayer' ||
+    className === 'Slaughterer' ||
+    className === 'Rogue Slayer'
+  ) {
+    return (await import('@/assets/slayer.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Gun Crusher' ||
+    className === 'Gun Breaker' ||
+    className === 'Master Gun Breaker' ||
+    className === 'Heist Gun Crusher' ||
+    className === 'Magnus Gun Crusher'
+  ) {
+    return (await import('@/assets/gun_crusher.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'White Wizard' ||
+    className === 'Light Master' ||
+    className === 'Shine Wizard' ||
+    className === 'Shine Master' ||
+    className === 'Glory Wizard'
+  ) {
+    return (await import('@/assets/glory_wizard.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Mage' ||
+    className === 'Wo Mage' ||
+    className === 'Arch Mage' ||
+    className === 'Mystic Mage' ||
+    className === 'Battle Mage'
+  ) {
+    return (await import('@/assets/battle_mage.jpg')).default; // Carga dinámica
+  } else if (
+    className === 'Illusion Knight' ||
+    className === 'Mirage Knight' ||
+    className === 'Illusion Master' ||
+    className === 'Mystic Knight' ||
+    className === 'Phantom Pain Knight'
+  ) {
+    return (await import('@/assets/phantom_pain_knight.jpg')).default; // Carga dinámica
+  }
+
+  // Valor por defecto si no se encuentra una clase
+  return (await import('@/assets/default_class_image.png')).default; // Imagen por defecto
 };
 
 const uniqueClasses = computed(() => {
@@ -135,7 +267,24 @@ const filteredCharacters = computed(() => {
   });
 });
 
-onMounted(fetchData);
+const preloadImages = async () => {
+  for (const character of characters.value) {
+    const className = character['Información del Personaje'].Clase;
+    const familyName = character['Información Gens'].Familia;
+
+    if (!classImages.value[className]) {
+      classImages.value[className] = await getClassImage(className);
+    }
+    
+    if (!familyImages.value[familyName]) {
+      familyImages.value[familyName] = await getFamilyImage(familyName);
+    }
+  }
+};
+
+onMounted(() => {
+  fetchData().then(preloadImages);
+});
 </script>
 
 <template>
@@ -145,23 +294,15 @@ onMounted(fetchData);
       {{ errorMessage }}
     </div>
     <div v-if="characters.length > 0" class="filters">
-      <input
-        v-model="searchQuery"
-        placeholder="Search..."
-        class="search-input"
-      />
+      <input v-model="searchQuery" placeholder="Search..." class="search-input" />
       <select v-model="selectedClass" class="filter-select">
         <option value="">All Classes</option>
-        <option
-          v-for="className in uniqueClasses"
-          :key="className"
-          :value="className"
-        >
+        <option v-for="className in uniqueClasses" :key="className" :value="className">
           {{ className }}
         </option>
       </select>
       <select v-model="selectedFamily" class="filter-select">
-        <option value="">All Families</option>
+        <option value="">All Gens</option>
         <option v-for="family in uniqueFamilies" :key="family" :value="family">
           {{ family }}
         </option>
@@ -176,41 +317,35 @@ onMounted(fetchData);
     <table v-if="filteredCharacters.length > 0">
       <thead>
         <tr>
-          <th>Personaje</th>
-          <th>Clase</th>
-          <th>Grand Resets</th>
-          <th>Ubicación</th>
-          <th>Pack de Beneficios</th>
-          <th>Familia</th>
+          <th>Character</th>
+          <th>Class</th>
+          <th>Location</th>
+          <th>Gens</th>
           <th>Guild</th>
-          <th>Acciones</th>
+          <th>Options</th>
         </tr>
       </thead>
       <tbody>
-        <tr v-for="character in filteredCharacters" :key="character.id">
+        <tr v-for="(character) in filteredCharacters" :key="character.id">
           <td>{{ character['Información del Personaje'].Personaje }}</td>
-          <td>{{ character['Información del Personaje'].Clase }}</td>
-          <td>{{ character['Información del Personaje']['Grand Resets'] }}</td>
+          <td>
+            <img 
+          :src="classImages[character['Información del Personaje'].Clase]" 
+          alt="Class Image" 
+          v-if="classImages[character['Información del Personaje'].Clase]" 
+        />
+          </td>
           <td>{{ character['Información del Personaje'].Ubicación }}</td>
           <td>
-            {{
-              (parseInt(
-                character['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
-              ) + parseInt(
-                character['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
-              ) + parseInt(
-                character['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
-              ) + parseInt(
-                character['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
-              )) > 6000
-                ? 'SI'
-                : 'NO'
-            }}
+            <img 
+          :src="familyImages[character['Información Gens'].Familia]" 
+          alt="Family Image" 
+          v-if="familyImages[character['Información Gens'].Familia]" 
+        />
           </td>
-          <td>{{ character['Información Gens'].Familia }}</td>
           <td>{{ character['Información del Guild'].Guild }}</td>
           <td>
-            <button @click="openModal(character)">VER</button>
+            <button @click="openModal(character)">Details</button>
           </td>
         </tr>
       </tbody>
@@ -219,155 +354,84 @@ onMounted(fetchData);
       No characters match the current filters.
     </div>
     <div v-else-if="isLoading" class="loading-message">
-      Loading character data...
+      Loading characters data...
     </div>
 
     <div v-if="selectedCharacter" class="modal" @click.self="closeModal">
       <div class="modal-content">
-        <h2>Detalles del Personaje</h2>
-
-        <h3>Información del Personaje</h3>
-    <table>
-      <tbody>
-        <tr>
-          <td><strong>Personaje:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Personaje }}</td>
-        </tr>
-        <tr>
-          <td><strong>Clase:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Clase }}</td>
-        </tr>
-        <tr>
-          <td><strong>País:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].País }}</td>
-        </tr>
-        <tr>
-          <td><strong>Último Ingreso:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje']['Último Ingreso'] }}</td>
-        </tr>
-        <tr>
-          <td><strong>Nivel Nivel M.:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje']['NivelNivel M.'] }}</td>
-        </tr>
-        <tr>
-          <td><strong>Resets:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Resets }}</td>
-        </tr>
-        <tr>
-          <td><strong>Grand Resets:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje']['Grand Resets'] }}</td>
-        </tr>
-        <tr>
-          <td><strong>Ubicación:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Ubicación }}</td>
-        </tr>
-        <tr>
-          <td><strong>Nivel PK:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje']['Nivel PK'] }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h3>Estadísticas</h3>
-    <table>
-      <tbody>
-        <tr>
-          <td><strong>Fuerza:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Fuerza }}</td>
-        </tr>
-        <tr>
-          <td><strong>Agilidad:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Agilidad }}</td>
-        </tr>
-        <tr>
-          <td><strong>Vitalidad:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Vitalidad }}</td>
-        </tr>
-        <tr>
-          <td><strong>Energía:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Energía }}</td>
-        </tr>
-        <tr>
-          <td><strong>Comando:</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje'].Comando }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h3>Bonificaciones</h3>
-    <table>
-      <tbody>
-        <tr>
-          <td><strong>Fuerza (Bonus):</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje']['Fuerza (Bonus)'] }}</td>
-        </tr>
-        <tr>
-          <td><strong>Agilidad (Bonus):</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje']['Agilidad (Bonus)'] }}</td>
-        </tr>
-        <tr>
-          <td><strong>Vitalidad (Bonus):</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'] }}</td>
-        </tr>
-        <tr>
-          <td><strong>Energía (Bonus):</strong></td>
-          <td>{{ selectedCharacter['Información del Personaje']['Energía (Bonus)'] }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h3>Información Gens</h3>
-    <table>
-      <tbody>
-        <tr>
-          <td><strong>Familia:</strong></td>
-          <td>{{ selectedCharacter['Información Gens'].Familia }}</td>
-        </tr>
-        <tr>
-          <td><strong>Rango:</strong></td>
-          <td>{{ selectedCharacter['Información Gens'].Rango }}</td>
-        </tr>
-        <tr>
-          <td><strong>Puntos:</strong></td>
-          <td>{{ selectedCharacter['Información Gens'].Puntos }}</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <h3>Información del Guild</h3>
-    <table>
-      <tbody>
-        <tr>
-          <td><strong>Guild:</strong></td>
-          <td>{{ selectedCharacter['Información del Guild'].Guild }}</td>
-        </tr>
-        <tr>
-          <td><strong>Master:</strong></td>
-          <td>{{ selectedCharacter['Información del Guild'].Master }}</td>
-        </tr>
-        <tr>
-          <td><strong>Miembros:</strong></td>
-          <td>{{ selectedCharacter['Información del Guild'].Miembros }}</td>
-        </tr>
-        <tr>
-          <td><strong>Puntos:</strong></td>
-          <td>{{ selectedCharacter['Información del Guild'].Puntos }}</td>
-        </tr>
-        <tr>
-          <td><strong>Aliados:</strong></td>
-          <td>{{ selectedCharacter['Información del Guild'].Aliados }}</td>
-        </tr>
-        <tr>
-          <td><strong>Enemigos:</strong></td>
-          <td>{{ selectedCharacter['Información del Guild'].Enemigos }}</td>
-        </tr>
-        <tr>
-          <td><strong>Posición:</strong></td>
-          <td>{{ selectedCharacter['Información del Guild'].Posición }}</td>
-        </tr>
-      </tbody>
-    </table>
-        <button @click="closeModal">Cerrar</button>
+        <div class="character-info">
+          <img :src="familyImage" alt="Family Image" class="family-image"/>
+          <h1>{{ selectedCharacter['Información del Personaje'].Personaje }}</h1>
+          <img :src="classImage" alt="Class Image" class="class-image" />
+      </div>
+        <table class="custom-table">
+          <tbody>
+            <tr>
+              <td><strong>Guild:</strong></td>
+              <td>
+                {{ selectedCharacter['Información del Guild'].Guild }}
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Location:</strong></td>
+              <td>{{ selectedCharacter['Información del Personaje'].Ubicación }}</td>
+            </tr>
+            <tr>
+              <td><strong>Log Login:</strong></td>
+              <td>{{ selectedCharacter['Información del Personaje']['Último Ingreso'] }}</td>
+            </tr>
+            <tr>
+              <td><strong>Level:</strong></td>
+              <td>
+                {{
+                  (() => {
+                    const valor = selectedCharacter['Información del Personaje']['NivelNivel M.'].replace(/[.,\s]/g, '');
+                    const parte1 = parseInt(valor.slice(0, 3), 10); // Primeros 3 dígitos
+                    const parte2 = parseInt(valor.slice(3), 10); // Últimos dígitos
+                    return parte1 + parte2;
+                })()
+                }}
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Stats Pack:</strong></td>
+              <td>
+                {{
+                  (parseInt(
+                    selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
+                  ) + parseInt(
+                    selectedCharacter['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
+                  ) + parseInt(
+                    selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
+                  ) + parseInt(
+                    selectedCharacter['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
+                  )) > 6000
+                    ? 'Sí'
+                    : 'No'
+                }}
+              </td>
+            </tr>
+            <tr>
+              <td><strong>Stats GR Full:</strong></td>
+              <td>
+                {{
+                  (parseInt(
+                    selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
+                  ) + parseInt(
+                    selectedCharacter['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
+                  ) + parseInt(
+                    selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
+                  ) + parseInt(
+                    selectedCharacter['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
+                  )) >= 6000
+                    ? 'Sí'
+                    : 'No'
+                }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <button @click="closeModal">Close</button>
       </div>
     </div>
   </div>
@@ -426,13 +490,29 @@ th {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
   max-width: 600px;
   width: 90%;
-  max-height: 80%; /* Limitar la altura del modal */
-  overflow-y: auto; /* Habilitar el desplazamiento vertical */
+  max-height: 80%;
+  /* Limitar la altura del modal */
+  overflow-y: auto;
+  /* Habilitar el desplazamiento vertical */
 }
 
-h2, h3 {
+h2,
+h3 {
   margin: 0 0 10px;
   color: #333;
+}
+
+.character-info {
+  display: flex; /* Usar flexbox para alinear elementos en fila */
+  align-items: center; /* Alinea verticalmente los elementos al centro */
+  justify-content: center; /* Centra horizontalmente los elementos */
+}
+
+.family-image,
+.class-image {
+  width: 50px; /* Ajusta el ancho según sea necesario */
+  height: auto; /* Mantiene la proporción de aspecto */
+  margin: 0 10px; /* Espaciado entre las imágenes y el nombre */
 }
 
 table {
