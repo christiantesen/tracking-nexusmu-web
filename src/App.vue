@@ -46,6 +46,7 @@ const errorMessage = ref<string | null>(null);
 const searchQuery = ref('');
 const selectedClass = ref('');
 const selectedFamily = ref('');
+const selectedGuild = ref('');
 const isLoading = ref(false);
 
 const fetchData = async () => {
@@ -126,8 +127,11 @@ const filteredCharacters = computed(() => {
     const matchesFamily =
       selectedFamily.value === '' ||
       char['Información Gens'].Familia === selectedFamily.value;
+    const matchesGuild =
+      selectedGuild.value === '' ||
+      char['Información del Guild'].Guild === selectedGuild.value;
 
-    return matchesSearch && matchesClass && matchesFamily;
+    return matchesSearch && matchesClass && matchesFamily && matchesGuild;
   });
 });
 
