@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
-import axios from 'axios';
+import { ref, onMounted, onUnmounted, computed } from 'vue';
 
 interface Character {
   id: string;
@@ -52,32 +51,75 @@ const classImages = ref<{ [key: string]: string }>({});
 const familyImages = ref<{ [key: string]: string }>({});
 const classImage = ref<string>(''); // Imagen de clase
 const familyImage = ref<string>(''); // Imagen de familia
+  const connectionStatus = ref<'connecting' | 'connected' | 'error' | 'fallback'>('connecting');
+let socket: WebSocket | null = null;
+let reconnectTimeout: number | null = null;
+let reconnectAttempts = 0;
+const MAX_RECONNECT_ATTEMPTS = 3;
 
-const fetchData = async () => {
-  isLoading.value = true;
-  try {
-    const response = await axios.get(
-      'https://tracking-nexusmu.onrender.com/scrape/'
-    );
+const mockCharacters: Character[] = [
+  // ... (keep the existing mock data)
+];
 
-    const data = response.data;
-    characters.value = Object.entries(data).map(
-      ([id, info]: [string, any]) => ({
-        id,
-        'Información del Personaje': info['Información del Personaje'],
-        'Información Gens': info['Información Gens'],
-        'Información del Guild': info['Información del Guild'],
-      })
-    );
-    errorMessage.value = null;
-  } catch (error) {
-    console.error('Error fetching data:', error);
-    errorMessage.value =
-      'Failed to fetch character data. Please try again later.';
-    characters.value = [];
-  } finally {
-    isLoading.value = false;
+const fetchData = () => {
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    handleFallback();
+    return;
   }
+  isLoading.value = true;
+  // Crear una nueva conexión WebSocket
+  connectionStatus.value = 'connecting';
+  socket = new WebSocket('wss://tracking-nexusmu.onrender.com/ws/scrape/');
+  //const socket = new WebSocket('wss://tracking-nexusmu.onrender.com/ws/scrape');
+
+  // Evento que se ejecuta cuando se abre la conexión
+  socket.onopen = () => {
+    connectionStatus.value = 'connected';
+    reconnectAttempts = 0;
+    errorMessage.value = null;
+  };
+
+  // Evento que se ejecuta cuando se recibe un mensaje desde el WebSocket
+  socket!.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+
+      // Actualizar los personajes con la información recibida
+      characters.value = Object.entries(data).map(
+        ([id, info]: [string, any]) => ({
+          id,
+          'Información del Personaje': info['Información del Personaje'],
+          'Información Gens': info['Información Gens'],
+          'Información del Guild': info['Información del Guild'],
+        })
+      );
+
+      // Llamar a preloadImages cuando los datos de los personajes estén listos
+      preloadImages();
+    } catch (e) {
+      console.error('Error parsing WebSocket message:', e);
+    }
+  };
+
+  // Evento que se ejecuta cuando ocurre un error en la conexión WebSocket
+  socket.onerror = (error) => {
+    console.error('WebSocket error:', error);
+    if (connectionStatus.value !== 'fallback') {
+      handleConnectionError();
+    }
+    errorMessage.value = 'Failed to connect to WebSocket. Please try again later.';
+    characters.value = [];
+    isLoading.value = false;
+  };
+
+  // Evento que se ejecuta cuando la conexión WebSocket se cierra
+  socket.onclose = () => {
+    console.log('WebSocket connection closed');
+    if (connectionStatus.value !== 'fallback') {
+      handleConnectionError();
+    }
+    isLoading.value = false;
+  };
 };
 
 const openModal = async (character: Character) => {
@@ -266,22 +308,65 @@ const filteredCharacters = computed(() => {
 });
 
 const preloadImages = async () => {
+  const classCache = new Set<string>();
+  const familyCache = new Set<string>();
+
   for (const character of characters.value) {
     const className = character['Información del Personaje'].Clase;
     const familyName = character['Información Gens'].Familia;
 
-    if (!classImages.value[className]) {
+    // Cargar las imágenes si no están en caché
+    if (className && !classCache.has(className)) {
+      classCache.add(className);
       classImages.value[className] = await getClassImage(className);
     }
-    
-    if (!familyImages.value[familyName]) {
+
+    if (familyName && !familyCache.has(familyName)) {
+      familyCache.add(familyName);
       familyImages.value[familyName] = await getFamilyImage(familyName);
     }
   }
 };
 
+const handleConnectionError = () => {
+  connectionStatus.value = 'error';
+  reconnectAttempts++;
+  
+  if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
+    handleFallback();
+  } else {
+    scheduleReconnect();
+  }
+};
+
+const handleFallback = () => {
+  connectionStatus.value = 'fallback';
+  characters.value = mockCharacters;
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+    reconnectTimeout = null;
+  }
+};
+
+const scheduleReconnect = () => {
+  if (!reconnectTimeout) {
+    reconnectTimeout = setTimeout(() => {
+      fetchData();
+    }, 5000) as unknown as number;
+  }
+};
+
 onMounted(() => {
-  fetchData().then(preloadImages);
+  fetchData();
+});
+
+onUnmounted(() => {
+  if (socket) {
+    socket.close();
+  }
+  if (reconnectTimeout) {
+    clearTimeout(reconnectTimeout);
+  }
 });
 </script>
 
@@ -327,19 +412,13 @@ onMounted(() => {
         <tr v-for="(character) in filteredCharacters" :key="character.id">
           <td>{{ character['Información del Personaje'].Personaje }}</td>
           <td>
-            <img 
-          :src="classImages[character['Información del Personaje'].Clase]" 
-          alt="Class Image" 
-          v-if="classImages[character['Información del Personaje'].Clase]" 
-        />
+            <img :src="classImages[character['Información del Personaje'].Clase]" alt="Class Image"
+              v-if="classImages[character['Información del Personaje'].Clase]" />
           </td>
           <td>{{ character['Información del Personaje'].Ubicación }}</td>
           <td>
-            <img 
-          :src="familyImages[character['Información Gens'].Familia]" 
-          alt="Family Image" 
-          v-if="familyImages[character['Información Gens'].Familia]" 
-        />
+            <img :src="familyImages[character['Información Gens'].Familia]" alt="Family Image"
+              v-if="familyImages[character['Información Gens'].Familia]" />
           </td>
           <td>{{ character['Información del Guild'].Guild }}</td>
           <td>
@@ -358,10 +437,10 @@ onMounted(() => {
     <div v-if="selectedCharacter" class="modal" @click.self="closeModal">
       <div class="modal-content">
         <div class="character-info">
-          <img :src="familyImage" alt="Family Image" class="family-image"/>
+          <img :src="familyImage" alt="Family Image" class="family-image" />
           <h1>{{ selectedCharacter['Información del Personaje'].Personaje }}</h1>
           <img :src="classImage" alt="Class Image" class="class-image" />
-      </div>
+        </div>
         <table class="custom-table">
           <tbody>
             <tr>
@@ -387,7 +466,7 @@ onMounted(() => {
                     const parte1 = parseInt(valor.slice(0, 3), 10); // Primeros 3 dígitos
                     const parte2 = parseInt(valor.slice(3), 10); // Últimos dígitos
                     return parte1 + parte2;
-                })()
+                  })()
                 }}
               </td>
             </tr>
@@ -440,10 +519,14 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
-  user-select: none; /* Para navegadores modernos */
-    -moz-user-select: none; /* Para Firefox */
-    -webkit-user-select: none; /* Para Safari */
-    -ms-user-select: none; /* Para Internet Explorer/Edge */
+  user-select: none;
+  /* Para navegadores modernos */
+  -moz-user-select: none;
+  /* Para Firefox */
+  -webkit-user-select: none;
+  /* Para Safari */
+  -ms-user-select: none;
+  /* Para Internet Explorer/Edge */
 }
 
 .filters {
@@ -505,16 +588,22 @@ h3 {
 }
 
 .character-info {
-  display: flex; /* Usar flexbox para alinear elementos en fila */
-  align-items: center; /* Alinea verticalmente los elementos al centro */
-  justify-content: center; /* Centra horizontalmente los elementos */
+  display: flex;
+  /* Usar flexbox para alinear elementos en fila */
+  align-items: center;
+  /* Alinea verticalmente los elementos al centro */
+  justify-content: center;
+  /* Centra horizontalmente los elementos */
 }
 
 .family-image,
 .class-image {
-  width: 50px; /* Ajusta el ancho según sea necesario */
-  height: auto; /* Mantiene la proporción de aspecto */
-  margin: 0 10px; /* Espaciado entre las imágenes y el nombre */
+  width: 50px;
+  /* Ajusta el ancho según sea necesario */
+  height: auto;
+  /* Mantiene la proporción de aspecto */
+  margin: 0 10px;
+  /* Espaciado entre las imágenes y el nombre */
 }
 
 table {
