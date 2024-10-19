@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
+import ThemeToggle from './components/ThemeToggle.vue';
+
 
 interface Character {
   id: string;
@@ -380,6 +382,7 @@ onUnmounted(() => {
 
 <template>
   <div class="container">
+    <ThemeToggle />
     <h1>Tracking Table</h1>
     <div v-if="errorMessage" class="error-message">
       {{ errorMessage }}
@@ -521,20 +524,39 @@ onUnmounted(() => {
     </div>
   </div>
 </template>
-
 <style scoped>
+/* Variables de color para tema claro y oscuro */
+:root {
+  --background-color: #ffffff; /* Color de fondo claro */
+  --text-color: #333333; /* Color de texto claro */
+  --primary-color: #4caf50; /* Color primario */
+  --secondary-color: #007bff; /* Color secundario */
+  --border-color: #333333; /* Color de borde */
+  --hover-background: rgba(76, 175, 80, 0.2); /* Color de fondo al pasar el ratón */
+}
+
+.dark-theme {
+  --background-color: #121212; /* Color de fondo oscuro */
+  --text-color: #ffffff; /* Color de texto oscuro */
+  --primary-color: #1db954; /* Color primario oscuro */
+  --secondary-color: #0d6efd; /* Color secundario oscuro */
+  --border-color: #ffffff; /* Color de borde oscuro */
+  --hover-background: rgba(29, 185, 84, 0.2); /* Color de fondo al pasar el ratón en oscuro */
+}
+
+body {
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s, color 0.3s; /* Transiciones suaves */
+  font-family: 'Arial', sans-serif; /* Fuente más moderna */
+  line-height: 1.6; /* Mejora la legibilidad */
+}
+
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
   user-select: none;
-  /* Para navegadores modernos */
-  -moz-user-select: none;
-  /* Para Firefox */
-  -webkit-user-select: none;
-  /* Para Safari */
-  -ms-user-select: none;
-  /* Para Internet Explorer/Edge */
 }
 
 .filters {
@@ -544,23 +566,55 @@ onUnmounted(() => {
 .search-input,
 .filter-select {
   margin-right: 10px;
-  padding: 5px;
+  padding: 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+  transition: border 0.3s;
+}
+
+.search-input:focus,
+.filter-select:focus {
+  border-color: var(--primary-color);
+  outline: none;
 }
 
 table {
   width: 100%;
   border-collapse: collapse;
+  margin-bottom: 20px;
 }
 
 th,
 td {
-  border: 1px solid #ddd;
-  padding: 8px;
+  border: 1px solid var(--border-color);
+  padding: 12px; /* Mayor espacio interno */
   text-align: left;
+  transition: background-color 0.3s; /* Para transiciones suaves */
 }
 
 th {
-  background-color: #f2f2f2;
+  background-color: var(--primary-color);
+  color: #ffffff;
+}
+
+td {
+  background-color: var(--background-color);
+  color: var(--text-color);
+}
+
+/* Estilos para celdas de tabla en tema oscuro */
+.dark-theme th {
+  background-color: var(--primary-color);
+}
+
+.dark-theme td {
+  background-color: #333; /* Fondo gris oscuro */
+  color: #ffffff; /* Texto blanco */
+}
+
+/* Efecto hover para las celdas */
+td:hover {
+  background-color: rgba(76, 175, 80, 0.5); /* Color verde con algo de transparencia */
 }
 
 .modal {
@@ -572,66 +626,42 @@ th {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
+  background-color: rgba(0, 0, 0, 0.5);
   z-index: 1000;
 }
 
 .modal-content {
-  background-color: #fff;
+  background-color: rgba(255, 255, 255, 0.95); /* Fondo blanco con un poco de opacidad */
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7); /* Sombra más oscura y más grande */
   max-width: 600px;
   width: 90%;
   max-height: 80%;
-  /* Limitar la altura del modal */
   overflow-y: auto;
-  /* Habilitar el desplazamiento vertical */
 }
 
 h2,
 h3 {
   margin: 0 0 10px;
-  color: #333;
+  color: var(--text-color);
 }
 
 .character-info {
   display: flex;
-  /* Usar flexbox para alinear elementos en fila */
   align-items: center;
-  /* Alinea verticalmente los elementos al centro */
   justify-content: center;
-  /* Centra horizontalmente los elementos */
 }
 
 .family-image,
 .class-image {
   width: 50px;
-  /* Ajusta el ancho según sea necesario */
   height: auto;
-  /* Mantiene la proporción de aspecto */
   margin: 0 10px;
-  /* Espaciado entre las imágenes y el nombre */
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 20px;
-}
-
-td {
-  padding: 10px;
-  border: 1px solid #ccc;
-}
-
-td:first-child {
-  font-weight: bold;
-  background-color: #f9f9f9;
 }
 
 .close-button {
-  background-color: #007bff;
+  background-color: var(--secondary-color);
   color: white;
   border: none;
   border-radius: 5px;
@@ -642,11 +672,7 @@ td:first-child {
 }
 
 .close-button:hover {
-  background-color: #0056b3;
-}
-
-.character-info {
-  margin-bottom: 20px;
+  background-color: darken(var(--secondary-color), 10%);
 }
 
 .info-grid {
@@ -658,25 +684,21 @@ td:first-child {
 
 .info-item {
   padding: 10px;
-  background: #f9f9f9;
   border-radius: 5px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.1); /* Borde suave alrededor de los elementos */
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2); /* Sombra suave */
 }
 
-.close-button {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  padding: 10px 15px;
-  cursor: pointer;
-  font-size: 16px;
-  transition: background-color 0.3s;
+.info-grid,
+.info-item {
+  background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco más opaco para los elementos internos */
 }
 
-.close-button:hover {
-  background-color: #0056b3;
+.modal-content h2,
+.modal-content h3 {
+  color: #333; /* Color de texto más oscuro */
 }
+
 
 .error-message {
   color: red;
