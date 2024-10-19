@@ -94,10 +94,8 @@ const closeModal = () => {
 
 const getFamilyImage = async (family: string) => {
   if (family === 'Vanert') {
-    console.log('Vanert');
     return (await import('@/assets/vanert.png')).default; // Carga dinámica
   } else if (family === 'Duprian') {
-    console.log('Duprian');
     return (await import('@/assets/duprian.png')).default; // Carga dinámica
   }
   return '';
@@ -442,6 +440,10 @@ onMounted(() => {
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  user-select: none; /* Para navegadores modernos */
+    -moz-user-select: none; /* Para Firefox */
+    -webkit-user-select: none; /* Para Safari */
+    -ms-user-select: none; /* Para Internet Explorer/Edge */
 }
 
 .filters {
