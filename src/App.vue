@@ -48,6 +48,7 @@ const searchQuery = ref('');
 const selectedClass = ref('');
 const selectedFamily = ref('');
 const selectedGuild = ref('');
+const selectedMap = ref('');
 const isLoading = ref(false);
 const classImages = ref<{ [key: string]: string }>({});
 const familyImages = ref<{ [key: string]: string }>({});
@@ -281,6 +282,18 @@ const uniqueGuilds = computed(() => {
   return ['', ...Array.from(guilds)];
 });
 
+const uniqueMaps = computed(() => {
+  const maps = new Set(
+    characters.value.map((char) => {
+      // Extraemos solo el nombre del mapa antes de las coordenadas
+      const ubicacion = char['Información del Personaje'].Ubicación;
+      const mapName = ubicacion.replace(/\s*\(.*\)$/, '').trim(); // Eliminamos todo lo que está entre paréntesis
+      return mapName;
+    })
+  );
+  return ['', ...Array.from(maps)];
+});
+
 const filteredCharacters = computed(() => {
   return characters.value.filter((char) => {
     const matchesSearch =
@@ -303,8 +316,11 @@ const filteredCharacters = computed(() => {
     const matchesGuild =
       selectedGuild.value === '' ||
       char['Información del Guild'].Guild === selectedGuild.value;
+    const matchesMap =
+      selectedMap.value === '' ||
+      char['Información del Personaje'].Ubicación.includes(selectedMap.value);
 
-    return matchesSearch && matchesClass && matchesFamily && matchesGuild;
+    return matchesSearch && matchesClass && matchesFamily && matchesGuild && matchesMap;
   });
 });
 
@@ -405,6 +421,12 @@ onUnmounted(() => {
         <option value="">All Guilds</option>
         <option v-for="guild in uniqueGuilds" :key="guild" :value="guild">
           {{ guild }}
+        </option>
+      </select>
+      <select v-model="selectedMap" class="filter-select">
+        <option value="">All Maps</option>
+        <option v-for="map in uniqueMaps" :key="map" :value="map">
+          {{ map }}
         </option>
       </select>
     </div>
