@@ -65,9 +65,10 @@ section span:hover
 section .signin
 {
   position: absolute;
-  width: 60vh;
-  min-height: 50vh; /* Mínimo 50% de la altura de la ventana */
-  max-height: 80vh; /* Máximo 80% de la altura de la ventana */
+  max-width: 100vh;
+  min-width: 50vh;
+  min-height: 40vh; /* Mínimo 50% de la altura de la ventana */
+  max-height: 90vh; /* Máximo 80% de la altura de la ventana */
   background: #222;  
   z-index: 1000;
   display: flex;

@@ -1,7 +1,5 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
-import ThemeToggle from './components/ThemeToggle.vue';
-
 
 interface Character {
   id: string;
@@ -60,6 +58,50 @@ let reconnectTimeout: any = null; // Change to 'any' for compatibility
 let fallbackTimeout: any = null; // Change to 'any' for compatibility
 let reconnectAttempts = 0;
 const FALLBACK_DURATION = 30000; // Duration before fallback to mock data in ms
+
+const username = ref('');
+const password = ref('');
+const isAuthenticated = ref(false);
+const isKeys = ref(false);
+
+const sequenceToUnlock = ['1', '2', '3', '4']; // Cambia esto según tu secuencia deseada
+let userInput: string[] = []; // Array para almacenar las teclas presionadas
+
+const currentTime = ref(new Date()); // Estado para la hora actual
+
+// Computed property para formatear la hora
+const formattedTime = computed(() => {
+  const hours = currentTime.value.getHours().toString().padStart(2, '0'); // Formatea a dos dígitos
+  const minutes = currentTime.value.getMinutes().toString().padStart(2, '0');
+  const seconds = currentTime.value.getSeconds().toString().padStart(2, '0');
+  return `${hours}:${minutes}:${seconds}`; // Retorna el formato HH:MM:SS
+});
+
+// Función para manejar el evento de tecla presionada
+function handleKeyPress(event: KeyboardEvent) {
+  // Agregar la tecla presionada al array
+  userInput.push(event.key);
+
+  // Comprobar si la secuencia coincide
+  if (userInput.join('') === sequenceToUnlock.join('')) {
+    isKeys.value = true; // Cambiar a true si la secuencia es correcta
+  }
+
+  // Limitar el tamaño del array a la longitud de la secuencia
+  if (userInput.length >= sequenceToUnlock.length) {
+    userInput.shift(); // Eliminar el primer elemento si excede la longitud
+  }
+}
+
+function handleLogin() {
+  // Simulación de validación de usuario
+  if (username.value === 'admin' && password.value === '12345') {
+    isAuthenticated.value = true; // Autenticado
+    errorMessage.value = ''; // Limpiar mensaje de error
+  } else {
+    errorMessage.value = 'Usuario o contraseña incorrectos'; // Mensaje de error
+  }
+}
 
 const mockCharacters: Character[] = [
   // ... (keep the existing mock data)
@@ -378,12 +420,19 @@ const scheduleReconnect = () => {
     }, 5000) as any; // Try reconnecting every 5 seconds
   }
 };
-
+let intervalId: number;
 onMounted(() => {
+  // Actualiza la hora cada segundo
+  setInterval(() => {
+    currentTime.value = new Date(); // Actualiza la hora actual
+  }, 1000);
+  window.addEventListener('keydown', handleKeyPress);
   fetchData();
 });
 
 onUnmounted(() => {
+  clearInterval(intervalId); // Limpia el intervalo si fuera necesario
+  window.removeEventListener('keydown', handleKeyPress);
   if (socket) {
     socket.close(); // Close socket on unmount
   }
@@ -394,157 +443,204 @@ onUnmounted(() => {
     clearTimeout(fallbackTimeout); // Clear fallback timeout
   }
 });
+
+var sheet = (function() {
+	var style = document.createElement("style");
+	document.head.appendChild(style);
+	return style.sheet;
+})();
+
+// get the starting postion based on the current time
+var date = new Date();
+var sDeg = date.getSeconds() / 60 * 360 + 90;
+var mDeg = date.getMinutes() / 60 * 360 + 90 + sDeg / 60;
+var hDeg = date.getHours() / 12 * 360 + 90 + mDeg / 12;
+
+// offset second and minute hands based on the staring time of the hour since the hour hand rotates the other two hands as well
+sDeg -= hDeg;
+mDeg -= hDeg;
+
+// create css rules for staring position and animation
+sheet!.addRule('.clock::after', 'transform: rotate('+ sDeg + 'deg)');
+sheet!.addRule('.clock::before', 'transform: rotate('+ mDeg + 'deg)');
+sheet!.addRule('.clock', 'transform: rotate('+ hDeg + 'deg)');
+
+sheet!.insertRule("@keyframes sSpin { 0 { transform: rotate(" + sDeg + "deg); } 100% { transform: rotate(" + (sDeg + 360) + "deg); } }", 0);
+sheet!.insertRule("@keyframes mSpin { 0 { transform: rotate(" + mDeg + "deg); } 100% { transform: rotate(" + (mDeg + 360) + "deg); } }", 0);
+sheet!.insertRule("@keyframes hSpin { 0 { transform: rotate(" + hDeg + "deg); } 100% { transform: rotate(" + (hDeg + 360) + "deg); } }", 0);
+
 </script>
 
 <template>
-  <div class="container">
-    <h1 style="color: greenyellow;">Tracking Table</h1>
-    <div v-if="errorMessage" class="error-message">
-      {{ errorMessage }}
-    </div>
-    <div v-if="characters.length > 0" class="filters">
-      <input v-model="searchQuery" placeholder="Search..." class="search-input" />
-      <select v-model="selectedClass" class="filter-select">
-        <option value="">All Classes</option>
-        <option v-for="className in uniqueClasses" :key="className" :value="className">
-          {{ className }}
-        </option>
-      </select>
-      <select v-model="selectedFamily" class="filter-select">
-        <option value="">All Gens</option>
-        <option v-for="family in uniqueFamilies" :key="family" :value="family">
-          {{ family }}
-        </option>
-      </select>
-      <select v-model="selectedGuild" class="filter-select">
-        <option value="">All Guilds</option>
-        <option v-for="guild in uniqueGuilds" :key="guild" :value="guild">
-          {{ guild }}
-        </option>
-      </select>
-      <select v-model="selectedMap" class="filter-select">
-        <option value="">All Maps</option>
-        <option v-for="map in uniqueMaps" :key="map" :value="map">
-          {{ map }}
-        </option>
-      </select>
-    </div>
-    <div class="table-container">
-      <table v-if="filteredCharacters.length > 0">
-        <thead>
-          <tr>
-            <th>Character</th>
-            <th>Class</th>
-            <th>Location</th>
-            <th>Gens</th>
-            <th>Guild</th>
-            <th>Options</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="(character) in filteredCharacters" :key="character.id">
-            <td>{{ character['Información del Personaje'].Personaje }}</td>
-            <td>
-              <img :src="classImages[character['Información del Personaje'].Clase]" alt="Class Image"
-                v-if="classImages[character['Información del Personaje'].Clase]" />
-            </td>
-            <td>{{ character['Información del Personaje'].Ubicación }}</td>
-            <td>
-              <img :src="familyImages[character['Información Gens'].Familia]" alt="Family Image"
-                v-if="familyImages[character['Información Gens'].Familia]" />
-            </td>
-            <td>{{ character['Información del Guild'].Guild }}</td>
-            <td>
-              <div class="inputBox">
-                <input type="submit" @click="openModal(character)" value="Details">
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-      <div v-else-if="characters.length > 0" class="no-results">
-        No characters match the current filters.
-      </div>
-      <div v-else-if="isLoading" class="loading-message">
-        Loading characters data...
-      </div>
-    </div>
-    <div v-if="selectedCharacter" class="modal" @click.self="closeModal">
-      <div class="modal-content">
-        <div class="character-info">
-          <img :src="familyImage" alt="Family Image" class="family-image" />
-          <h1 style="color: greenyellow;">{{ selectedCharacter['Información del Personaje'].Personaje }}</h1>
-          <img :src="classImage" alt="Class Image" class="class-image" />
+  <div class="clock" v-if="!isKeys">
+    <div class="time">{{ formattedTime }}</div>
+  </div>
+  <div v-else>
+    <div class="content" v-if="!isAuthenticated">
+      <h2>Sign In</h2>
+      <div class="form">
+        <div class="inputBox">
+          <input type="text" v-model="username" required /> <i>Username</i>
         </div>
-        <table class="table-container">
+        <div class="inputBox">
+          <input type="password" v-model="password" required /> <i>Password</i>
+        </div>
+        <div class="inputBox">
+          <input type="submit" value="Login" @click.prevent="handleLogin" />
+        </div>
+        <div v-if="errorMessage" class="error-message">{{ errorMessage }}</div>
+      </div>
+    </div>
+
+    <div v-else class="container">
+      <h1 style="color: greenyellow;">Tracking Table</h1>
+      <div v-if="errorMessage" class="error-message">
+        {{ errorMessage }}
+      </div>
+      <div v-if="characters.length > 0" class="filters">
+        <input v-model="searchQuery" placeholder="Search..." class="search-input" />
+        <select v-model="selectedClass" class="filter-select">
+          <option value="">All Classes</option>
+          <option v-for="className in uniqueClasses" :key="className" :value="className">
+            {{ className }}
+          </option>
+        </select>
+        <select v-model="selectedFamily" class="filter-select">
+          <option value="">All Gens</option>
+          <option v-for="family in uniqueFamilies" :key="family" :value="family">
+            {{ family }}
+          </option>
+        </select>
+        <select v-model="selectedGuild" class="filter-select">
+          <option value="">All Guilds</option>
+          <option v-for="guild in uniqueGuilds" :key="guild" :value="guild">
+            {{ guild }}
+          </option>
+        </select>
+        <select v-model="selectedMap" class="filter-select">
+          <option value="">All Maps</option>
+          <option v-for="map in uniqueMaps" :key="map" :value="map">
+            {{ map }}
+          </option>
+        </select>
+      </div>
+      <div class="table-container">
+        <table v-if="filteredCharacters.length > 0">
+          <thead>
+            <tr>
+              <th>Character</th>
+              <th>Class</th>
+              <th>Location</th>
+              <th>Gens</th>
+              <th>Guild</th>
+              <th>Options</th>
+            </tr>
+          </thead>
           <tbody>
-            <tr>
-              <td><strong>Guild:</strong></td>
+            <tr v-for="(character) in filteredCharacters" :key="character.id">
+              <td>{{ character['Información del Personaje'].Personaje }}</td>
               <td>
-                {{ selectedCharacter['Información del Guild'].Guild }}
+                <img :src="classImages[character['Información del Personaje'].Clase]" alt="Class Image"
+                  v-if="classImages[character['Información del Personaje'].Clase]" />
               </td>
-            </tr>
-            <tr>
-              <td><strong>Location:</strong></td>
-              <td>{{ selectedCharacter['Información del Personaje'].Ubicación }}</td>
-            </tr>
-            <tr>
-              <td><strong>Log Login:</strong></td>
-              <td>{{ selectedCharacter['Información del Personaje']['Último Ingreso'] }}</td>
-            </tr>
-            <tr>
-              <td><strong>Level:</strong></td>
+              <td>{{ character['Información del Personaje'].Ubicación }}</td>
               <td>
-                {{
-                  (() => {
-                    const valor = selectedCharacter['Información del Personaje']['NivelNivel M.'].replace(/[.,\s]/g, '');
-                    const parte1 = parseInt(valor.slice(0, 3), 10); // Primeros 3 dígitos
-                    const parte2 = parseInt(valor.slice(3), 10); // Últimos dígitos
-                    return parte1 + parte2;
-                  })()
-                }}
+                <img :src="familyImages[character['Información Gens'].Familia]" alt="Family Image"
+                  v-if="familyImages[character['Información Gens'].Familia]" />
               </td>
-            </tr>
-            <tr>
-              <td><strong>Stats Pack:</strong></td>
+              <td>{{ character['Información del Guild'].Guild }}</td>
               <td>
-                {{
-                  (parseInt(
-                    selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
-                  ) + parseInt(
-                    selectedCharacter['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
-                  ) + parseInt(
-                    selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
-                  ) + parseInt(
-                    selectedCharacter['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
-                  )) > 6000
-                    ? 'Sí'
-                    : 'No'
-                }}
-              </td>
-            </tr>
-            <tr>
-              <td><strong>Stats GR Full:</strong></td>
-              <td>
-                {{
-                  (parseInt(
-                    selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
-                  ) + parseInt(
-                    selectedCharacter['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
-                  ) + parseInt(
-                    selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
-                  ) + parseInt(
-                    selectedCharacter['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
-                  )) >= 6000
-                    ? 'Sí'
-                    : 'No'
-                }}
+                <div class="inputBox">
+                  <input type="submit" @click="openModal(character)" value="Details">
+                </div>
               </td>
             </tr>
           </tbody>
         </table>
-        <div class="inputBox">
-          <input type="submit" @click="closeModal" value="Close">
+        <div v-else-if="characters.length > 0" class="no-results">
+          No characters match the current filters.
+        </div>
+        <div v-else-if="isLoading" class="loading-message">
+          Loading characters data...
+        </div>
+      </div>
+      <div v-if="selectedCharacter" class="modal" @click.self="closeModal">
+        <div class="modal-content">
+          <div class="character-info">
+            <img :src="familyImage" alt="Family Image" class="family-image" />
+            <h1 style="color: greenyellow;">{{ selectedCharacter['Información del Personaje'].Personaje }}</h1>
+            <img :src="classImage" alt="Class Image" class="class-image" />
+          </div>
+          <table class="table-container">
+            <tbody>
+              <tr>
+                <td><strong>Guild:</strong></td>
+                <td>
+                  {{ selectedCharacter['Información del Guild'].Guild }}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Location:</strong></td>
+                <td>{{ selectedCharacter['Información del Personaje'].Ubicación }}</td>
+              </tr>
+              <tr>
+                <td><strong>Log Login:</strong></td>
+                <td>{{ selectedCharacter['Información del Personaje']['Último Ingreso'] }}</td>
+              </tr>
+              <tr>
+                <td><strong>Level:</strong></td>
+                <td>
+                  {{
+                    (() => {
+                      const valor = selectedCharacter['Información del Personaje']['NivelNivel M.'].replace(/[.,\s]/g, '');
+                      const parte1 = parseInt(valor.slice(0, 3), 10); // Primeros 3 dígitos
+                      const parte2 = parseInt(valor.slice(3), 10); // Últimos dígitos
+                      return parte1 + parte2;
+                    })()
+                  }}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Stats Pack:</strong></td>
+                <td>
+                  {{
+                    (parseInt(
+                      selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
+                    ) + parseInt(
+                      selectedCharacter['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
+                    ) + parseInt(
+                      selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
+                    ) + parseInt(
+                      selectedCharacter['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
+                    )) > 6000
+                      ? 'Sí'
+                      : 'No'
+                  }}
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Stats GR Full:</strong></td>
+                <td>
+                  {{
+                    (parseInt(
+                      selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
+                    ) + parseInt(
+                      selectedCharacter['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
+                    ) + parseInt(
+                      selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
+                    ) + parseInt(
+                      selectedCharacter['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
+                    )) >= 6000
+                      ? 'Sí'
+                      : 'No'
+                  }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="inputBox">
+            <input type="submit" @click="closeModal" value="Close">
+          </div>
         </div>
       </div>
     </div>
@@ -555,7 +651,8 @@ onUnmounted(() => {
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
 
 .table-container {
-  max-height: 60vh;
+  max-height: 65vh;
+  max-width: 80vh;
   /* Ajusta la altura máxima según sea necesario */
   overflow-y: auto;
   /* Habilita el desplazamiento vertical */
@@ -988,5 +1085,51 @@ section .signin .content .form .inputBox i {
   transform: translateY(-7.5px);
   font-size: 0.8em;
   color: #fff;
+}
+
+
+/* combine the clock and hour hand into one element */
+.clock {
+  animation: hSpin 86400s infinite linear;
+  background-image: linear-gradient(to bottom, black, black 5px, transparent 5px), radial-gradient(circle, #000 7px, white 7px);
+  background-position: 45px 122.5px, 0 0;
+  background-repeat: no-repeat;
+  background-size: 80px 100%, 100% 100%;
+  border-radius: 50%;
+  border: 10px solid;
+  height: 250px;
+  position: relative;
+  width: 250px;
+}
+
+.clock:before,
+.clock:after {
+  background-repeat: no-repeat;
+  background-size: 114px 5px;
+  display: block;
+  height: 5px;
+  left: calc(50% - 120px);
+  margin-top: -2.5px;
+  position: absolute;
+  top: 50%;
+  transform-origin: 100%;
+  width: 120px;
+  content: '';
+}
+
+/* second hand */
+.clock:after {
+  /* adjust timing to account for the background moving */
+  animation: sSpin 59.99s infinite linear;
+
+  background-image: linear-gradient(red, red);
+}
+
+/* minute hand */
+.clock:before {
+  /* adjust timing to account for the background moving */
+  animation: mSpin 3599.95s infinite linear;
+
+  background-image: linear-gradient(black, black);
 }
 </style>
