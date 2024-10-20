@@ -64,7 +64,8 @@ const password = ref('');
 const isAuthenticated = ref(false);
 const isKeys = ref(false);
 
-const sequenceToUnlock = ['1', '2', '3', '4']; // Cambia esto según tu secuencia deseada
+const sequenceToUnlock = ['9', 'Q', 'X', '5']; // Secuencia poco probable
+
 let userInput: string[] = []; // Array para almacenar las teclas presionadas
 
 const currentTime = ref(new Date()); // Estado para la hora actual
@@ -95,7 +96,7 @@ function handleKeyPress(event: KeyboardEvent) {
 
 function handleLogin() {
   // Simulación de validación de usuario
-  if (username.value === 'admin' && password.value === '12345') {
+  if (username.value === 'zxcvbn456' && password.value === 'C0mpl3x!ty9') {
     isAuthenticated.value = true; // Autenticado
     errorMessage.value = ''; // Limpiar mensaje de error
   } else {
