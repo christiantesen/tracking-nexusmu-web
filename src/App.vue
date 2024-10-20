@@ -512,7 +512,7 @@ const reloadData = () => {
     <div v-else class="container">
       <h1 style="color: greenyellow;">Tracking Table</h1>
       <div class="inputBox">
-          <input type="submit" @click="reloadData" value="Reload">
+          <input type="submit" @click="reloadData" value=" 🔃 ">
         </div>
       <div v-if="errorMessage" class="error-message">
         {{ errorMessage }}
@@ -702,7 +702,7 @@ const reloadData = () => {
             </tbody>
           </table>
           <div class="inputBox">
-            <input type="submit" @click="closeModal" value="Close">
+            <input type="submit" @click="closeModal" value=" ❌ ">
           </div>
         </div>
       </div>
