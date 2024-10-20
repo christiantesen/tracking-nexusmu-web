@@ -714,7 +714,7 @@ const reloadData = () => {
 @import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
 
 .table-container {
-  max-height: 65vh;
+  max-height: 55vh;
   max-width: 80vh;
   /* Ajusta la altura máxima según sea necesario */
   overflow-y: auto;
