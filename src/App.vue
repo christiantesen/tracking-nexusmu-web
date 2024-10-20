@@ -173,6 +173,15 @@ const openModal = async (character: Character) => {
   familyImage.value = await getFamilyImage(character['Información Gens'].Familia);
 };
 
+const copyLocation = async (character: Character) => {
+  // Persona | Ubicación | Guild
+  const message = `${character['Información del Personaje'].Personaje} | ${
+    character['Información del Personaje'].Ubicación
+  } | ${character['Información del Guild'].Guild}`;
+  await navigator.clipboard.writeText(message);
+  alert('Location copied to clipboard!');
+};
+
 const closeModal = () => {
   selectedCharacter.value = null;
   classImage.value = '';
@@ -580,10 +589,12 @@ const reloadData = () => {
               <td
                 style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 {{ character['Información del Guild'].Guild }}</td>
-              <td
-                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+              <td>
                 <div class="inputBox">
-                  <input type="submit" @click="openModal(character)" value="Details">
+                  <input type="submit" @click="openModal(character)" value=" 🕵️ ">
+                </div>
+                <div class="inputBox">
+                  <input type="submit" @click="copyLocation(character)" value=" 🚩 ">
                 </div>
               </td>
             </tr>
