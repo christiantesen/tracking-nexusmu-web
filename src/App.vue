@@ -398,8 +398,7 @@ onUnmounted(() => {
 
 <template>
   <div class="container">
-    <ThemeToggle />
-    <h1>Tracking Table</h1>
+    <h1 style="color: greenyellow;">Tracking Table</h1>
     <div v-if="errorMessage" class="error-message">
       {{ errorMessage }}
     </div>
@@ -430,51 +429,54 @@ onUnmounted(() => {
         </option>
       </select>
     </div>
-    <table v-if="filteredCharacters.length > 0">
-      <thead>
-        <tr>
-          <th>Character</th>
-          <th>Class</th>
-          <th>Location</th>
-          <th>Gens</th>
-          <th>Guild</th>
-          <th>Options</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="(character) in filteredCharacters" :key="character.id">
-          <td>{{ character['Información del Personaje'].Personaje }}</td>
-          <td>
-            <img :src="classImages[character['Información del Personaje'].Clase]" alt="Class Image"
-              v-if="classImages[character['Información del Personaje'].Clase]" />
-          </td>
-          <td>{{ character['Información del Personaje'].Ubicación }}</td>
-          <td>
-            <img :src="familyImages[character['Información Gens'].Familia]" alt="Family Image"
-              v-if="familyImages[character['Información Gens'].Familia]" />
-          </td>
-          <td>{{ character['Información del Guild'].Guild }}</td>
-          <td>
-            <button @click="openModal(character)">Details</button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <div v-else-if="characters.length > 0" class="no-results">
-      No characters match the current filters.
+    <div class="table-container">
+      <table v-if="filteredCharacters.length > 0">
+        <thead>
+          <tr>
+            <th>Character</th>
+            <th>Class</th>
+            <th>Location</th>
+            <th>Gens</th>
+            <th>Guild</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="(character) in filteredCharacters" :key="character.id">
+            <td>{{ character['Información del Personaje'].Personaje }}</td>
+            <td>
+              <img :src="classImages[character['Información del Personaje'].Clase]" alt="Class Image"
+                v-if="classImages[character['Información del Personaje'].Clase]" />
+            </td>
+            <td>{{ character['Información del Personaje'].Ubicación }}</td>
+            <td>
+              <img :src="familyImages[character['Información Gens'].Familia]" alt="Family Image"
+                v-if="familyImages[character['Información Gens'].Familia]" />
+            </td>
+            <td>{{ character['Información del Guild'].Guild }}</td>
+            <td>
+              <div class="inputBox">
+                <input type="submit" @click="openModal(character)" value="Details">
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+      <div v-else-if="characters.length > 0" class="no-results">
+        No characters match the current filters.
+      </div>
+      <div v-else-if="isLoading" class="loading-message">
+        Loading characters data...
+      </div>
     </div>
-    <div v-else-if="isLoading" class="loading-message">
-      Loading characters data...
-    </div>
-
     <div v-if="selectedCharacter" class="modal" @click.self="closeModal">
       <div class="modal-content">
         <div class="character-info">
           <img :src="familyImage" alt="Family Image" class="family-image" />
-          <h1>{{ selectedCharacter['Información del Personaje'].Personaje }}</h1>
+          <h1 style="color: greenyellow;">{{ selectedCharacter['Información del Personaje'].Personaje }}</h1>
           <img :src="classImage" alt="Class Image" class="class-image" />
         </div>
-        <table class="custom-table">
+        <table class="table-container">
           <tbody>
             <tr>
               <td><strong>Guild:</strong></td>
@@ -541,37 +543,243 @@ onUnmounted(() => {
             </tr>
           </tbody>
         </table>
-        <button @click="closeModal">Close</button>
+        <div class="inputBox">
+          <input type="submit" @click="closeModal" value="Close">
+        </div>
       </div>
     </div>
   </div>
 </template>
+
 <style scoped>
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+.table-container {
+  max-height: 60vh;
+  /* Ajusta la altura máxima según sea necesario */
+  overflow-y: auto;
+  /* Habilita el desplazamiento vertical */
+  margin-top: 20px;
+  /* Espacio superior */
+  border: 1px solid #ccc;
+  /* Opcional: borde para visualizar mejor el contenedor */
+  border-radius: 4px;
+  /* Opcional: bordes redondeados */
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Quicksand', sans-serif;
+}
+
 /* Variables de color para tema claro y oscuro */
 :root {
-  --background-color: #ffffff; /* Color de fondo claro */
-  --text-color: #333333; /* Color de texto claro */
-  --primary-color: #4caf50; /* Color primario */
-  --secondary-color: #007bff; /* Color secundario */
-  --border-color: #333333; /* Color de borde */
-  --hover-background: rgba(76, 175, 80, 0.2); /* Color de fondo al pasar el ratón */
+  --background-color: #ffffff;
+  /* Color de fondo claro */
+  --text-color: #333333;
+  /* Color de texto claro */
+  --primary-color: #4caf50;
+  /* Color primario */
+  --secondary-color: #007bff;
+  /* Color secundario */
+  --border-color: #333333;
+  /* Color de borde */
+  --hover-background: rgba(76, 175, 80, 0.2);
+  /* Color de fondo al pasar el ratón */
 }
 
 .dark-theme {
-  --background-color: #121212; /* Color de fondo oscuro */
-  --text-color: #ffffff; /* Color de texto oscuro */
-  --primary-color: #1db954; /* Color primario oscuro */
-  --secondary-color: #0d6efd; /* Color secundario oscuro */
-  --border-color: #ffffff; /* Color de borde oscuro */
-  --hover-background: rgba(29, 185, 84, 0.2); /* Color de fondo al pasar el ratón en oscuro */
+  --background-color: #121212;
+  /* Color de fondo oscuro */
+  --text-color: #ffffff;
+  /* Color de texto oscuro */
+  --primary-color: #1db954;
+  /* Color primario oscuro */
+  --secondary-color: #0d6efd;
+  /* Color secundario oscuro */
+  --border-color: #ffffff;
+  /* Color de borde oscuro */
+  --hover-background: rgba(29, 185, 84, 0.2);
+  /* Color de fondo al pasar el ratón en oscuro */
 }
 
 body {
-  background-color: var(--background-color);
   color: var(--text-color);
-  transition: background-color 0.3s, color 0.3s; /* Transiciones suaves */
-  font-family: 'Arial', sans-serif; /* Fuente más moderna */
-  line-height: 1.6; /* Mejora la legibilidad */
+  transition: background-color 0.3s, color 0.3s;
+  /* Transiciones suaves */
+  font-family: 'Arial', sans-serif;
+  /* Fuente más moderna */
+  line-height: 1.6;
+  /* Mejora la legibilidad */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background: #000;
+}
+
+section {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 2px;
+  flex-wrap: wrap;
+  overflow: hidden;
+}
+
+section::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(#000, #0f0, #000);
+  animation: animate 5s linear infinite;
+}
+
+@keyframes animate {
+  0% {
+    transform: translateY(-100%);
+  }
+
+  100% {
+    transform: translateY(100%);
+  }
+}
+
+section span {
+  position: relative;
+  display: block;
+  width: calc(6.25vw - 2px);
+  height: calc(6.25vw - 2px);
+  background: #181818;
+  z-index: 2;
+  transition: 1.5s;
+}
+
+section span:hover {
+  background: #0f0;
+  transition: 0s;
+}
+
+section .signin {
+  position: absolute;
+  width: 400px;
+  background: #222;
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 40px;
+  border-radius: 4px;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 9);
+}
+
+section .signin .content {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 40px;
+}
+
+section .signin .content h2 {
+  font-size: 2em;
+  color: #0f0;
+  text-transform: uppercase;
+}
+
+section .signin .content .form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+}
+
+section .signin .content .form .inputBox {
+  position: relative;
+  width: 100%;
+}
+
+section .signin .content .form .inputBox input {
+  position: relative;
+  width: 100%;
+  background: #333;
+  border: none;
+  outline: none;
+  padding: 25px 10px 7.5px;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: 500;
+  font-size: 1em;
+}
+
+section .signin .content .form .inputBox i {
+  position: absolute;
+  left: 0;
+  padding: 15px 10px;
+  font-style: normal;
+  color: #aaa;
+  transition: 0.5s;
+  pointer-events: none;
+}
+
+.signin .content .form .inputBox input:focus~i,
+.signin .content .form .inputBox input:valid~i {
+  transform: translateY(-7.5px);
+  font-size: 0.8em;
+  color: #fff;
+}
+
+.signin .content .form .links {
+  position: relative;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+}
+
+.signin .content .form .links a {
+  color: #fff;
+  text-decoration: none;
+}
+
+.signin .content .form .links a:nth-child(2) {
+  color: #0f0;
+  font-weight: 600;
+}
+
+.signin .content .form .inputBox input[type="submit"] {
+  padding: 10px;
+  background: #0f0;
+  color: #000;
+  font-weight: 600;
+  font-size: 1.35em;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+input[type="submit"]:active {
+  opacity: 0.6;
+}
+
+@media (max-width: 900px) {
+  section span {
+    width: calc(10vw - 2px);
+    height: calc(10vw - 2px);
+  }
+}
+
+@media (max-width: 600px) {
+  section span {
+    width: calc(20vw - 2px);
+    height: calc(20vw - 2px);
+  }
 }
 
 .container {
@@ -608,14 +816,18 @@ table {
 
 th,
 td {
-  border: 1px solid var(--border-color);
-  padding: 12px; /* Mayor espacio interno */
+  border-bottom: 1px solid #ddd;
+  /* Línea divisoria entre filas */
+  padding: 8px;
+  /* Mayor espacio interno */
   text-align: left;
-  transition: background-color 0.3s; /* Para transiciones suaves */
+  transition: background-color 0.3s;
+  /* Para transiciones suaves */
 }
 
 th {
-  background-color: var(--primary-color);
+  background-color: #f2f2f2;
+  /* Color de fondo para el encabezado */
   color: #ffffff;
 }
 
@@ -630,13 +842,16 @@ td {
 }
 
 .dark-theme td {
-  background-color: #333; /* Fondo gris oscuro */
-  color: #ffffff; /* Texto blanco */
+  background-color: #333;
+  /* Fondo gris oscuro */
+  color: #ffffff;
+  /* Texto blanco */
 }
 
 /* Efecto hover para las celdas */
 td:hover {
-  background-color: rgba(76, 175, 80, 0.5); /* Color verde con algo de transparencia */
+  background-color: rgba(76, 175, 80, 0.5);
+  /* Color verde con algo de transparencia */
 }
 
 .modal {
@@ -653,16 +868,19 @@ td:hover {
 }
 
 .modal-content {
-  background-color: rgba(255, 255, 255, 0.95); /* Fondo blanco con un poco de opacidad */
+  background-color: #333;
+  /* Fondo blanco con un poco de opacidad */
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7); /* Sombra más oscura y más grande */
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.7);
+  /* Sombra más oscura y más grande */
   max-width: 600px;
   width: 90%;
   max-height: 80%;
   overflow-y: auto;
 }
 
+h1,
 h2,
 h3 {
   margin: 0 0 10px;
@@ -707,18 +925,22 @@ h3 {
 .info-item {
   padding: 10px;
   border-radius: 5px;
-  border: 1px solid rgba(0, 0, 0, 0.1); /* Borde suave alrededor de los elementos */
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2); /* Sombra suave */
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  /* Borde suave alrededor de los elementos */
+  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.2);
+  /* Sombra suave */
 }
 
 .info-grid,
 .info-item {
-  background-color: rgba(255, 255, 255, 0.9); /* Fondo blanco más opaco para los elementos internos */
+  background-color: rgba(255, 255, 255, 0.9);
+  /* Fondo blanco más opaco para los elementos internos */
 }
 
 .modal-content h2,
 .modal-content h3 {
-  color: #333; /* Color de texto más oscuro */
+  color: #333;
+  /* Color de texto más oscuro */
 }
 
 
@@ -731,5 +953,40 @@ h3 {
 .loading-message {
   text-align: center;
   margin-top: 20px;
+}
+
+section .signin .content .form .inputBox {
+  position: relative;
+  width: 100%;
+}
+
+section .signin .content .form .inputBox input {
+  position: relative;
+  width: 100%;
+  background: #333;
+  border: none;
+  outline: none;
+  padding: 25px 10px 7.5px;
+  border-radius: 4px;
+  color: #fff;
+  font-weight: 500;
+  font-size: 1em;
+}
+
+section .signin .content .form .inputBox i {
+  position: absolute;
+  left: 0;
+  padding: 15px 10px;
+  font-style: normal;
+  color: #aaa;
+  transition: 0.5s;
+  pointer-events: none;
+}
+
+.signin .content .form .inputBox input:focus~i,
+.signin .content .form .inputBox input:valid~i {
+  transform: translateY(-7.5px);
+  font-size: 0.8em;
+  color: #fff;
 }
 </style>
