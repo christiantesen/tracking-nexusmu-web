@@ -391,6 +391,7 @@ const preloadImages = async () => {
 const handleConnectionError = () => {
   connectionStatus.value = 'error';
   reconnectAttempts++;
+  errorMessage.value = 'No se pudo conectar al WS. Haz clic en el botón para intentar recargar los datos.';
   scheduleReconnect(); // Always schedule reconnect regardless of attempts
 
   // Schedule fallback to mock data after a certain duration if still disconnected
@@ -445,10 +446,10 @@ onUnmounted(() => {
   }
 });
 
-var sheet = (function() {
-	var style = document.createElement("style");
-	document.head.appendChild(style);
-	return style.sheet;
+var sheet = (function () {
+  var style = document.createElement("style");
+  document.head.appendChild(style);
+  return style.sheet;
 })();
 
 // get the starting postion based on the current time
@@ -462,19 +463,25 @@ sDeg -= hDeg;
 mDeg -= hDeg;
 
 // create css rules for staring position and animation
-sheet!.addRule('.clock::after', 'transform: rotate('+ sDeg + 'deg)');
-sheet!.addRule('.clock::before', 'transform: rotate('+ mDeg + 'deg)');
-sheet!.addRule('.clock', 'transform: rotate('+ hDeg + 'deg)');
+sheet!.addRule('.clock::after', 'transform: rotate(' + sDeg + 'deg)');
+sheet!.addRule('.clock::before', 'transform: rotate(' + mDeg + 'deg)');
+sheet!.addRule('.clock', 'transform: rotate(' + hDeg + 'deg)');
 
 sheet!.insertRule("@keyframes sSpin { 0 { transform: rotate(" + sDeg + "deg); } 100% { transform: rotate(" + (sDeg + 360) + "deg); } }", 0);
 sheet!.insertRule("@keyframes mSpin { 0 { transform: rotate(" + mDeg + "deg); } 100% { transform: rotate(" + (mDeg + 360) + "deg); } }", 0);
 sheet!.insertRule("@keyframes hSpin { 0 { transform: rotate(" + hDeg + "deg); } 100% { transform: rotate(" + (hDeg + 360) + "deg); } }", 0);
 
+// Al final de tu script, añade esta función
+const reloadData = () => {
+  fetchData(); // Llama a la función fetchData para recargar los datos
+};
 </script>
 
 <template>
   <div class="clock" v-if="!isKeys">
-    <div class="time">{{ formattedTime }}</div>
+    <div
+      style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;"
+      class="time">{{ formattedTime }}</div>
   </div>
   <div v-else>
     <div class="content" v-if="!isAuthenticated">
@@ -495,6 +502,9 @@ sheet!.insertRule("@keyframes hSpin { 0 { transform: rotate(" + hDeg + "deg); } 
 
     <div v-else class="container">
       <h1 style="color: greenyellow;">Tracking Table</h1>
+      <div class="inputBox">
+          <input type="submit" @click="reloadData" value="Reload">
+        </div>
       <div v-if="errorMessage" class="error-message">
         {{ errorMessage }}
       </div>
@@ -529,28 +539,49 @@ sheet!.insertRule("@keyframes hSpin { 0 { transform: rotate(" + hDeg + "deg); } 
         <table v-if="filteredCharacters.length > 0">
           <thead>
             <tr>
-              <th>Character</th>
-              <th>Class</th>
-              <th>Location</th>
-              <th>Gens</th>
-              <th>Guild</th>
-              <th>Options</th>
+              <th
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                Character</th>
+              <th
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                Class</th>
+              <th
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                Location</th>
+              <th
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                Gens</th>
+              <th
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                Guild</th>
+              <th
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                Options</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="(character) in filteredCharacters" :key="character.id">
-              <td>{{ character['Información del Personaje'].Personaje }}</td>
-              <td>
+              <td
+                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                {{ character['Información del Personaje'].Personaje }}</td>
+              <td
+                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 <img :src="classImages[character['Información del Personaje'].Clase]" alt="Class Image"
                   v-if="classImages[character['Información del Personaje'].Clase]" />
               </td>
-              <td>{{ character['Información del Personaje'].Ubicación }}</td>
-              <td>
+              <td
+                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                {{ character['Información del Personaje'].Ubicación }}</td>
+              <td
+                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 <img :src="familyImages[character['Información Gens'].Familia]" alt="Family Image"
                   v-if="familyImages[character['Información Gens'].Familia]" />
               </td>
-              <td>{{ character['Información del Guild'].Guild }}</td>
-              <td>
+              <td
+                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                {{ character['Información del Guild'].Guild }}</td>
+              <td
+                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 <div class="inputBox">
                   <input type="submit" @click="openModal(character)" value="Details">
                 </div>
@@ -575,22 +606,36 @@ sheet!.insertRule("@keyframes hSpin { 0 { transform: rotate(" + hDeg + "deg); } 
           <table class="table-container">
             <tbody>
               <tr>
-                <td><strong>Guild:</strong></td>
-                <td>
+                <td
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  <strong>Guild:</strong></td>
+                <td
+                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{ selectedCharacter['Información del Guild'].Guild }}
                 </td>
               </tr>
               <tr>
-                <td><strong>Location:</strong></td>
-                <td>{{ selectedCharacter['Información del Personaje'].Ubicación }}</td>
+                <td
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  <strong>Location:</strong></td>
+                <td
+                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  {{ selectedCharacter['Información del Personaje'].Ubicación }}</td>
               </tr>
               <tr>
-                <td><strong>Log Login:</strong></td>
-                <td>{{ selectedCharacter['Información del Personaje']['Último Ingreso'] }}</td>
+                <td
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  <strong>Log Login:</strong></td>
+                <td
+                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  {{ selectedCharacter['Información del Personaje']['Último Ingreso'] }}</td>
               </tr>
               <tr>
-                <td><strong>Level:</strong></td>
-                <td>
+                <td
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  <strong>Level:</strong></td>
+                <td
+                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{
                     (() => {
                       const valor = selectedCharacter['Información del Personaje']['NivelNivel M.'].replace(/[.,\s]/g, '');
@@ -602,8 +647,11 @@ sheet!.insertRule("@keyframes hSpin { 0 { transform: rotate(" + hDeg + "deg); } 
                 </td>
               </tr>
               <tr>
-                <td><strong>Stats Pack:</strong></td>
-                <td>
+                <td
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  <strong>Stats Pack:</strong></td>
+                <td
+                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{
                     (parseInt(
                       selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
@@ -620,8 +668,11 @@ sheet!.insertRule("@keyframes hSpin { 0 { transform: rotate(" + hDeg + "deg); } 
                 </td>
               </tr>
               <tr>
-                <td><strong>Stats GR Full:</strong></td>
-                <td>
+                <td
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  <strong>Stats GR Full:</strong></td>
+                <td
+                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{
                     (parseInt(
                       selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
@@ -1132,5 +1183,67 @@ section .signin .content .form .inputBox i {
   animation: mSpin 3599.95s infinite linear;
 
   background-image: linear-gradient(black, black);
+}
+
+.filters {
+  width: 80vh;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  /* Espaciado entre los elementos */
+  margin: 20px 0;
+  /* Margen superior e inferior */
+  padding: 10px;
+  border: 1px solid #ccc;
+  /* Borde alrededor del contenedor */
+  border-radius: 8px;
+  /* Esquinas redondeadas */
+  background-color: rgba(255, 255, 255, 0.9);
+  /* Fondo semitransparente */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  /* Sombra sutil */
+}
+
+.search-input,
+.filter-select {
+  padding: 8px 12px;
+  /* Espaciado interno */
+  border: 1px solid #aaa;
+  /* Borde de los inputs */
+  border-radius: 4px;
+  /* Esquinas redondeadas */
+  font-size: 16px;
+  /* Tamaño de fuente */
+  outline: none;
+  /* Sin contorno al hacer foco */
+  transition: border-color 0.3s;
+  /* Transición suave para el borde */
+  color: #333;
+  /* Color del texto */
+  background-color: #f9f9f9;
+  /* Fondo de los inputs */
+}
+
+.search-input:focus,
+.filter-select:focus {
+  border-color: greenyellow;
+  /* Color del borde al enfocar */
+  box-shadow: 0 0 5px rgba(0, 255, 85, 0.5);
+  /* Sombra al enfocar */
+}
+
+/* Mejora de la legibilidad del texto */
+.filter-select option {
+  padding: 10px;
+  /* Espaciado en las opciones del select */
+  color: #333;
+  /* Color del texto de las opciones */
+}
+
+/* Sombra sutil en el texto */
+.filter-select,
+.search-input {
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  /* Sombra sutil para mejorar la legibilidad */
 }
 </style>
