@@ -518,7 +518,7 @@ const preloadImages = async () => {
 const handleConnectionError = () => {
   connectionStatus.value = 'error';
   reconnectAttempts++;
-  errorMessage.value = 'No se pudo conectar al WS. Haz clic en el botón para intentar recargar los datos.';
+  errorMessage.value = 'Haz clic en el botón para Recargar/Actualizar los DATOS.';
   scheduleReconnect(); // Always schedule reconnect regardless of attempts
 
   // Schedule fallback to mock data after a certain duration if still disconnected
