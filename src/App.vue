@@ -251,7 +251,7 @@ const fetchData = () => {
   };
 
   // Evento que se ejecuta cuando ocurre un error en la conexión WebSocket
-  socket.onerror = (error) => {
+  socket.onerror = () => {//(error) => {
     //console.error('WebSocket error:', error);
     console.log('fgh');
     handleConnectionError();
@@ -260,7 +260,7 @@ const fetchData = () => {
   };
 
   // Evento que se ejecuta cuando la conexión WebSocket se cierra
-  socket.onclose = (event) => {
+  socket.onclose = () => {//(event) => {
     //console.log('WebSocket connection closed', event);
     console.log('vbn');
     handleConnectionError();
