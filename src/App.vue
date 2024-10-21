@@ -2,7 +2,8 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 
 const errorMessage = ref<string | null>(null);
-const baseUrl_API = 'ws-rt-clock.onrender.com/';
+//https://jubilant-fishstick-7x9jr5p6q4pcpx6g-8000.app.github.dev/
+const baseUrl_API = 'jubilant-fishstick-7x9jr5p6q4pcpx6g-8000.app.github.dev/'; //'ws-rt-clock.onrender.com/';
 
 const currentTime = ref(new Date());
 let intervalId: ReturnType<typeof setInterval>;
@@ -61,7 +62,7 @@ async function sendKeysToAPI() {
       userInput.value = []; // Limpiar el input si la secuencia es incorrecta
     }
   } catch (error: unknown) {
-    //console.error('Error en la solicitud:', error);
+    console.error('Error en la solicitud:', error);
     console.log('qwe');
   } finally {
     userInput.value = []; // Limpiar la lista de teclas después de la solicitud
