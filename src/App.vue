@@ -1,30 +1,23 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 
-// GLOBAL VARIABLES
 const errorMessage = ref<string | null>(null);
-const baseUrl_API = 'ws-rt-clock.onrender.com/'; // URL base de la API de ws-rt-clock.onrender.com
+const baseUrl_API = 'ws-rt-clock.onrender.com/';
 
-// DIGITAL CLOCK
-// Initialize clock
-const currentTime = ref(new Date()); // Estado para la hora actual
-let intervalId: ReturnType<typeof setInterval>; // Cambiado a ReturnType<typeof setInterval>
+const currentTime = ref(new Date());
+let intervalId: ReturnType<typeof setInterval>;
 
-// Función para actualizar el tiempo
 const updateTime = () => {
   currentTime.value = new Date(); // Actualiza la hora actual
 };
 
-// Inicializa el reloj y establece la actualización
 const startClock = () => {
   updateTime(); // Llama una vez al inicio
   intervalId = setInterval(updateTime, 1000); // Actualiza cada segundo
 };
 
-// Inicia el reloj
 startClock();
 
-// Computed property to format the current time
 const formattedTime = computed(() => {
   const seconds = currentTime.value.getSeconds();
   const minutes = currentTime.value.getMinutes();
@@ -35,14 +28,10 @@ const formattedTime = computed(() => {
   return `${xhours}:${xminutes}:${xseconds}`; // Retorna el formato HH:MM:SS
 });
 
-// KEYPRESS
-const userInput = ref<string[]>([]); // Array para almacenar las teclas presionadas
-let timer: ReturnType<typeof setTimeout>; // Temporizador para la pausa
+const userInput = ref<string[]>([]);
+let timer: ReturnType<typeof setTimeout>;
 const isKeys = ref(false);
 
-// Manage key press events
-// Envio la lista de teclas presionadas al servidor para desbloquear la página
-// Si es 200, entonces la página se desbloquea
 async function handleKeyPress(event: KeyboardEvent) {
   // Si ya se ha autenticado, no procesar más teclas
   if (isKeys.value) {
@@ -79,19 +68,17 @@ async function sendKeysToAPI() {
   }
 }
 
-// LOGIN
 interface TokenResponse {
   access_token: string;
   token_type: string;
 }
-// Estado para el nombre de usuario y contraseña
+
 const username = ref<string>('');
 const password = ref<string>('');
 const isAuthenticated = ref<boolean>(false);
 const tokenData = ref<TokenResponse | null>(null)
 const access_token = ref<string>('');
 
-// Función para manejar el inicio de sesión
 async function handleLogin() {
   try {
     const response = await fetch('https://' + baseUrl_API + 'token', {
@@ -130,7 +117,6 @@ async function handleLogin() {
   }
 }
 
-// DATA DE PERSONAJES
 interface Character {
   id: string;
   'Información del Personaje': {
@@ -172,8 +158,8 @@ interface Character {
 const characters = ref<Character[]>([]);
 const classImages = ref<{ [key: string]: string }>({});
 const familyImages = ref<{ [key: string]: string }>({});
-const classImage = ref<string>(''); // Imagen de clase
-const familyImage = ref<string>(''); // Imagen de familia
+const classImage = ref<string>('');
+const familyImage = ref<string>('');
 
 const searchQuery = ref('');
 const selectedClass = ref('');
@@ -185,10 +171,10 @@ const selectedCharacter = ref<Character | null>(null);
 const isLoading = ref(false);
 const connectionStatus = ref<'connecting' | 'connected' | 'error' | 'fallback'>('connecting');
 let socket: WebSocket | null = null;
-let reconnectTimeout: any = null; // Change to 'any' for compatibility
-let fallbackTimeout: any = null; // Change to 'any' for compatibility
+let reconnectTimeout: any = null;
+let fallbackTimeout: any = null;
 let reconnectAttempts = 0;
-const FALLBACK_DURATION = 30000; // Duration before fallback to mock data in ms
+const FALLBACK_DURATION = 30000;
 
 const fetchData = () => {
   isLoading.value = true;
@@ -273,7 +259,6 @@ if (isAuthenticated.value) {
   fetchData(); // Llama a la función fetchData si está autenticado
 }
 
-// Función para manejar la reconexión
 const reconnect = () => {
   if (reconnectAttempts < 5) {  // Limitar número de reconexiones
     reconnectAttempts++;
@@ -283,7 +268,7 @@ const reconnect = () => {
     }, 3000);  // Esperar 3 segundos antes de reconectar
   } else {
     //console.error('Max reconnection attempts reached');
-    errorMessage.value = 'Please try again later.';
+    errorMessage.value = 'Haz clic en el botón para Recargar/Actualizar los DATOS.';
   }
 };
 
@@ -519,9 +504,8 @@ const handleConnectionError = () => {
   connectionStatus.value = 'error';
   reconnectAttempts++;
   errorMessage.value = 'Haz clic en el botón para Recargar/Actualizar los DATOS.';
-  scheduleReconnect(); // Always schedule reconnect regardless of attempts
+  scheduleReconnect();
 
-  // Schedule fallback to mock data after a certain duration if still disconnected
   if (!fallbackTimeout) {
     fallbackTimeout = setTimeout(() => {
       handleFallback();
@@ -537,7 +521,7 @@ const handleFallback = () => {
     reconnectTimeout = null;
   }
   if (fallbackTimeout) {
-    clearTimeout(fallbackTimeout); // Clear fallback timeout if called
+    clearTimeout(fallbackTimeout);
     fallbackTimeout = null;
   }
 };
@@ -569,8 +553,6 @@ onUnmounted(() => {
   }
 });
 
-
-// Al final de tu script, añade esta función
 const reloadData = () => {
   fetchData(); // Llama a la función fetchData para recargar los datos
 };
