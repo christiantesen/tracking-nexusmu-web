@@ -3,7 +3,7 @@ import { ref, onMounted, onUnmounted, computed } from 'vue';
 
 const errorMessage = ref<string | null>(null);
 //https://jubilant-fishstick-7x9jr5p6q4pcpx6g-8000.app.github.dev/
-const baseUrl_API = 'jubilant-fishstick-7x9jr5p6q4pcpx6g-8000.app.github.dev/'; //'ws-rt-clock.onrender.com/';
+const baseUrl_API = 'ws-rt-clock.onrender.com/';
 
 const currentTime = ref(new Date());
 let intervalId: ReturnType<typeof setInterval>;
