@@ -174,7 +174,7 @@ let socket: WebSocket | null = null;
 let reconnectTimeout: any = null;
 let fallbackTimeout: any = null;
 let reconnectAttempts = 0;
-const FALLBACK_DURATION = 30000;
+const FALLBACK_DURATION = 5000;
 
 const fetchData = () => {
   isLoading.value = true;
