@@ -1,6 +1,136 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue';
 
+// GLOBAL VARIABLES
+const errorMessage = ref<string | null>(null);
+const baseUrl_API = 'ws-rt-clock.onrender.com/'; // URL base de la API de ws-rt-clock.onrender.com
+
+// DIGITAL CLOCK
+// Initialize clock
+const currentTime = ref(new Date()); // Estado para la hora actual
+let intervalId: ReturnType<typeof setInterval>; // Cambiado a ReturnType<typeof setInterval>
+
+// Función para actualizar el tiempo
+const updateTime = () => {
+  currentTime.value = new Date(); // Actualiza la hora actual
+};
+
+// Inicializa el reloj y establece la actualización
+const startClock = () => {
+  updateTime(); // Llama una vez al inicio
+  intervalId = setInterval(updateTime, 1000); // Actualiza cada segundo
+};
+
+// Inicia el reloj
+startClock();
+
+// Computed property to format the current time
+const formattedTime = computed(() => {
+  const seconds = currentTime.value.getSeconds();
+  const minutes = currentTime.value.getMinutes();
+  const hours = currentTime.value.getHours() % 12; // Modulo 12 para el formato de 12 horas
+  const xhours = hours.toString().padStart(2, '0');
+  const xminutes = minutes.toString().padStart(2, '0');
+  const xseconds = seconds.toString().padStart(2, '0');
+  return `${xhours}:${xminutes}:${xseconds}`; // Retorna el formato HH:MM:SS
+});
+
+// KEYPRESS
+const userInput = ref<string[]>([]); // Array para almacenar las teclas presionadas
+let timer: ReturnType<typeof setTimeout>; // Temporizador para la pausa
+const isKeys = ref(false);
+
+// Manage key press events
+// Envio la lista de teclas presionadas al servidor para desbloquear la página
+// Si es 200, entonces la página se desbloquea
+async function handleKeyPress(event: KeyboardEvent) {
+  // Si ya se ha autenticado, no procesar más teclas
+  if (isKeys.value) {
+    return;
+  }
+  // Agregar la tecla presionada al array
+  userInput.value.push(event.key);
+  // Reiniciar el temporizador cada vez que se presiona una tecla
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    await sendKeysToAPI();
+  }, 3000); // Espera 3 segundos sin pulsaciones
+}
+
+async function sendKeysToAPI() {
+  try {
+    const response = await fetch('https://' + baseUrl_API + 'unlock', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(userInput.value),
+    });
+    if (response.ok) {
+      isKeys.value = true; // Cambiar a true si la secuencia es correcta
+    } else {
+      userInput.value = []; // Limpiar el input si la secuencia es incorrecta
+    }
+  } catch (error: unknown) {
+    //console.error('Error en la solicitud:', error);
+    console.log('qwe');
+  } finally {
+    userInput.value = []; // Limpiar la lista de teclas después de la solicitud
+  }
+}
+
+// LOGIN
+interface TokenResponse {
+  access_token: string;
+  token_type: string;
+}
+// Estado para el nombre de usuario y contraseña
+const username = ref<string>('');
+const password = ref<string>('');
+const isAuthenticated = ref<boolean>(false);
+const tokenData = ref<TokenResponse | null>(null)
+const access_token = ref<string>('');
+
+// Función para manejar el inicio de sesión
+async function handleLogin() {
+  try {
+    const response = await fetch('https://' + baseUrl_API + 'token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({
+        username: username.value,
+        password: password.value,
+      }),
+    });
+    if (response.ok) {
+      isAuthenticated.value = true; // Autenticado
+      tokenData.value = await response.json(); // Guardar token de acceso
+      access_token.value = tokenData.value!.access_token; // Guardar token de acceso
+      errorMessage.value = ''; // Limpiar mensaje de error
+      // Limpiar campos de entrada
+      username.value = '';
+      password.value = '';
+      fetchData(); // Cargar datos si está autenticado
+    } else {
+      // Manejar errores del servidor
+      const errorResponse = await response.json();
+      errorMessage.value = errorResponse.detail || 'Access Denied'; // Mostrar error específico
+    }
+  } catch (error: unknown) { // Especificar el tipo de error como unknown
+    // Manejar errores de conexión
+    if (error instanceof Error) {
+      errorMessage.value = 'An error occurred: ' + error.message; // Usar message de Error
+    } else {
+      errorMessage.value = 'An unknown error occurred.'; // Mensaje genérico para otros tipos de error
+    }
+    //console.error('Error en la solicitud:', error);
+    console.log('asd');
+  }
+}
+
+// DATA DE PERSONAJES
 interface Character {
   id: string;
   'Información del Personaje': {
@@ -40,18 +170,19 @@ interface Character {
 }
 
 const characters = ref<Character[]>([]);
-const selectedCharacter = ref<Character | null>(null);
-const errorMessage = ref<string | null>(null);
+const classImages = ref<{ [key: string]: string }>({});
+const familyImages = ref<{ [key: string]: string }>({});
+const classImage = ref<string>(''); // Imagen de clase
+const familyImage = ref<string>(''); // Imagen de familia
+
 const searchQuery = ref('');
 const selectedClass = ref('');
 const selectedFamily = ref('');
 const selectedGuild = ref('');
 const selectedMap = ref('');
+const selectedCharacter = ref<Character | null>(null);
+
 const isLoading = ref(false);
-const classImages = ref<{ [key: string]: string }>({});
-const familyImages = ref<{ [key: string]: string }>({});
-const classImage = ref<string>(''); // Imagen de clase
-const familyImage = ref<string>(''); // Imagen de familia
 const connectionStatus = ref<'connecting' | 'connected' | 'error' | 'fallback'>('connecting');
 let socket: WebSocket | null = null;
 let reconnectTimeout: any = null; // Change to 'any' for compatibility
@@ -59,67 +190,21 @@ let fallbackTimeout: any = null; // Change to 'any' for compatibility
 let reconnectAttempts = 0;
 const FALLBACK_DURATION = 30000; // Duration before fallback to mock data in ms
 
-const username = ref('');
-const password = ref('');
-const isAuthenticated = ref(false);
-const isKeys = ref(false);
-
-const sequenceToUnlock = ['9', 'Q', 'X', '5']; // Secuencia poco probable
-
-let userInput: string[] = []; // Array para almacenar las teclas presionadas
-
-const currentTime = ref(new Date()); // Estado para la hora actual
-
-// Computed property para formatear la hora
-const formattedTime = computed(() => {
-  const hours = currentTime.value.getHours().toString().padStart(2, '0'); // Formatea a dos dígitos
-  const minutes = currentTime.value.getMinutes().toString().padStart(2, '0');
-  const seconds = currentTime.value.getSeconds().toString().padStart(2, '0');
-  return `${hours}:${minutes}:${seconds}`; // Retorna el formato HH:MM:SS
-});
-
-// Función para manejar el evento de tecla presionada
-function handleKeyPress(event: KeyboardEvent) {
-  // Agregar la tecla presionada al array
-  userInput.push(event.key);
-
-  // Comprobar si la secuencia coincide
-  if (userInput.join('') === sequenceToUnlock.join('')) {
-    isKeys.value = true; // Cambiar a true si la secuencia es correcta
-  }
-
-  // Limitar el tamaño del array a la longitud de la secuencia
-  if (userInput.length >= sequenceToUnlock.length) {
-    userInput.shift(); // Eliminar el primer elemento si excede la longitud
-  }
-}
-
-function handleLogin() {
-  // Simulación de validación de usuario
-  if (username.value === 'zxcvbn456' && password.value === 'C0mpl3x!ty9') {
-    isAuthenticated.value = true; // Autenticado
-    errorMessage.value = ''; // Limpiar mensaje de error
-  } else {
-    errorMessage.value = 'Usuario o contraseña incorrectos'; // Mensaje de error
-  }
-}
-
-const mockCharacters: Character[] = [
-  // ... (keep the existing mock data)
-];
-
 const fetchData = () => {
   isLoading.value = true;
-  // Crear una nueva conexión WebSocket
   connectionStatus.value = 'connecting';
-  socket = new WebSocket('wss://tracking-nexusmu.onrender.com/ws/scrape/');
-  //const socket = new WebSocket('wss://tracking-nexusmu.onrender.com/ws/scrape');
 
+  // Verifica si ya existe una conexión abierta y la cierra si es necesario
+  if (socket && socket.readyState === WebSocket.OPEN) {
+    socket.close();
+  }
+
+  socket = new WebSocket(`wss://${baseUrl_API}ws/scrape/?token=${access_token.value}`);
   // Evento que se ejecuta cuando se abre la conexión
   socket.onopen = () => {
     connectionStatus.value = 'connected';
     reconnectAttempts = 0;
-    errorMessage.value = null;
+    errorMessage.value = '';	// Limpiar mensaje de error
     if (fallbackTimeout) {
       clearTimeout(fallbackTimeout); // Clear fallback timeout on success
       fallbackTimeout = null;
@@ -130,41 +215,76 @@ const fetchData = () => {
   socket!.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
-
-      // Actualizar los personajes con la información recibida
-      characters.value = Object.entries(data).map(
-        ([id, info]: [string, any]) => ({
-          id,
-          'Información del Personaje': info['Información del Personaje'],
-          'Información Gens': info['Información Gens'],
-          'Información del Guild': info['Información del Guild'],
-        })
-      );
-
-      // Llamar a preloadImages cuando los datos de los personajes estén listos
-      preloadImages();
+      // Validación de datos antes de usarlos
+      if (data && typeof data === 'object') {
+        
+        Object.entries(data).forEach(([id, info]: [string, any]) => {
+        const existingCharacterIndex = characters.value.findIndex(character => character.id === id);
+        
+        // Si el personaje ya existe, actualiza sus datos
+        if (existingCharacterIndex !== -1) {
+          characters.value[existingCharacterIndex] = {
+            id,
+            'Información del Personaje': info['Información del Personaje'] || {},
+            'Información Gens': info['Información Gens'] || {},
+            'Información del Guild': info['Información del Guild'] || {},
+          };
+        } else {
+          // Si el personaje no existe, agrégalo a la lista
+          characters.value.push({
+            id,
+            'Información del Personaje': info['Información del Personaje'] || {},
+            'Información Gens': info['Información Gens'] || {},
+            'Información del Guild': info['Información del Guild'] || {},
+          });
+        }
+      });
+        preloadImages();
+      } else {
+        //console.warn('Received invalid data:', data);
+        console.log('zxc');
+      }
     } catch (e) {
-      console.error('Error parsing WebSocket message:', e);
+      //console.error('Error parsing WebSocket message:', e);
+      console.log('rty');
     }
   };
 
   // Evento que se ejecuta cuando ocurre un error en la conexión WebSocket
   socket.onerror = (error) => {
-    console.error('WebSocket error:', error);
-    if (connectionStatus.value !== 'fallback') {
-      handleConnectionError();
-    }
+    //console.error('WebSocket error:', error);
+    console.log('fgh');
+    handleConnectionError();
     errorMessage.value = 'Failed to connect to WebSocket. Please try again later.';
-    characters.value = [];
     isLoading.value = false;
   };
 
   // Evento que se ejecuta cuando la conexión WebSocket se cierra
-  socket.onclose = () => {
-    console.log('WebSocket connection closed');
+  socket.onclose = (event) => {
+    //console.log('WebSocket connection closed', event);
+    console.log('vbn');
     handleConnectionError();
     isLoading.value = false;
+    reconnect();
   };
+};
+
+if (isAuthenticated.value) {
+  fetchData(); // Llama a la función fetchData si está autenticado
+}
+
+// Función para manejar la reconexión
+const reconnect = () => {
+  if (reconnectAttempts < 5) {  // Limitar número de reconexiones
+    reconnectAttempts++;
+    setTimeout(() => {
+      //console.log(`Reconnecting... Attempt ${reconnectAttempts}`);
+      fetchData();  // Volver a intentar la conexión
+    }, 3000);  // Esperar 3 segundos antes de reconectar
+  } else {
+    //console.error('Max reconnection attempts reached');
+    errorMessage.value = 'Please try again later.';
+  }
 };
 
 const openModal = async (character: Character) => {
@@ -175,9 +295,8 @@ const openModal = async (character: Character) => {
 
 const copyLocation = async (character: Character) => {
   // Persona | Ubicación | Guild
-  const message = `${character['Información del Personaje'].Personaje} | ${
-    character['Información del Personaje'].Ubicación
-  } | ${character['Información del Guild'].Guild}`;
+  const message = `${character['Información del Personaje'].Personaje} | ${character['Información del Personaje'].Ubicación
+    } | ${character['Información del Guild'].Guild}`;
   await navigator.clipboard.writeText(message);
   alert('Location copied to clipboard!');
 };
@@ -337,9 +456,8 @@ const uniqueGuilds = computed(() => {
 const uniqueMaps = computed(() => {
   const maps = new Set(
     characters.value.map((char) => {
-      // Extraemos solo el nombre del mapa antes de las coordenadas
       const ubicacion = char['Información del Personaje'].Ubicación;
-      const mapName = ubicacion.replace(/\s*\(.*\)$/, '').trim(); // Eliminamos todo lo que está entre paréntesis
+      const mapName = ubicacion.replace(/\s*\(.*\)$/, '').trim();
       return mapName;
     })
   );
@@ -413,7 +531,7 @@ const handleConnectionError = () => {
 
 const handleFallback = () => {
   connectionStatus.value = 'fallback';
-  characters.value = mockCharacters;
+  characters.value = [];
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
     reconnectTimeout = null;
@@ -431,14 +549,10 @@ const scheduleReconnect = () => {
     }, 5000) as any; // Try reconnecting every 5 seconds
   }
 };
-let intervalId: number;
+
 onMounted(() => {
-  // Actualiza la hora cada segundo
-  setInterval(() => {
-    currentTime.value = new Date(); // Actualiza la hora actual
-  }, 1000);
+  intervalId = setInterval(updateTime, 1000); // Llama a updateTime cada segundo
   window.addEventListener('keydown', handleKeyPress);
-  fetchData();
 });
 
 onUnmounted(() => {
@@ -455,30 +569,6 @@ onUnmounted(() => {
   }
 });
 
-var sheet = (function () {
-  var style = document.createElement("style");
-  document.head.appendChild(style);
-  return style.sheet;
-})();
-
-// get the starting postion based on the current time
-var date = new Date();
-var sDeg = date.getSeconds() / 60 * 360 + 90;
-var mDeg = date.getMinutes() / 60 * 360 + 90 + sDeg / 60;
-var hDeg = date.getHours() / 12 * 360 + 90 + mDeg / 12;
-
-// offset second and minute hands based on the staring time of the hour since the hour hand rotates the other two hands as well
-sDeg -= hDeg;
-mDeg -= hDeg;
-
-// create css rules for staring position and animation
-sheet!.addRule('.clock::after', 'transform: rotate(' + sDeg + 'deg)');
-sheet!.addRule('.clock::before', 'transform: rotate(' + mDeg + 'deg)');
-sheet!.addRule('.clock', 'transform: rotate(' + hDeg + 'deg)');
-
-sheet!.insertRule("@keyframes sSpin { 0 { transform: rotate(" + sDeg + "deg); } 100% { transform: rotate(" + (sDeg + 360) + "deg); } }", 0);
-sheet!.insertRule("@keyframes mSpin { 0 { transform: rotate(" + mDeg + "deg); } 100% { transform: rotate(" + (mDeg + 360) + "deg); } }", 0);
-sheet!.insertRule("@keyframes hSpin { 0 { transform: rotate(" + hDeg + "deg); } 100% { transform: rotate(" + (hDeg + 360) + "deg); } }", 0);
 
 // Al final de tu script, añade esta función
 const reloadData = () => {
@@ -487,10 +577,8 @@ const reloadData = () => {
 </script>
 
 <template>
-  <div class="clock" v-if="!isKeys">
-    <div
-      style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;"
-      class="time">{{ formattedTime }}</div>
+  <div class="digital-clock" v-if="!isKeys">
+    <div class="time-display">{{ formattedTime }}</div> <!-- Muestra el tiempo formateado -->
   </div>
   <div v-else>
     <div class="content" v-if="!isAuthenticated">
@@ -512,8 +600,8 @@ const reloadData = () => {
     <div v-else class="container">
       <h1 style="color: greenyellow;">Tracking Table</h1>
       <div class="inputBox">
-          <input type="submit" @click="reloadData" value=" 🔃 ">
-        </div>
+        <input type="submit" @click="reloadData" value=" 🔃 ">
+      </div>
       <div v-if="errorMessage" class="error-message">
         {{ errorMessage }}
       </div>
@@ -571,23 +659,23 @@ const reloadData = () => {
           <tbody>
             <tr v-for="(character) in filteredCharacters" :key="character.id">
               <td
-                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 {{ character['Información del Personaje'].Personaje }}</td>
               <td
-                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 <img :src="classImages[character['Información del Personaje'].Clase]" alt="Class Image"
                   v-if="classImages[character['Información del Personaje'].Clase]" />
               </td>
               <td
-                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 {{ character['Información del Personaje'].Ubicación }}</td>
               <td
-                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 <img :src="familyImages[character['Información Gens'].Familia]" alt="Family Image"
                   v-if="familyImages[character['Información Gens'].Familia]" />
               </td>
               <td
-                style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                 {{ character['Información del Guild'].Guild }}</td>
               <td>
                 <div class="inputBox">
@@ -619,34 +707,38 @@ const reloadData = () => {
               <tr>
                 <td
                   style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Guild:</strong></td>
+                  <strong>Guild:</strong>
+                </td>
                 <td
-                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{ selectedCharacter['Información del Guild'].Guild }}
                 </td>
               </tr>
               <tr>
                 <td
                   style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Location:</strong></td>
+                  <strong>Location:</strong>
+                </td>
                 <td
-                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{ selectedCharacter['Información del Personaje'].Ubicación }}</td>
               </tr>
               <tr>
                 <td
                   style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Log Login:</strong></td>
+                  <strong>Log Login:</strong>
+                </td>
                 <td
-                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{ selectedCharacter['Información del Personaje']['Último Ingreso'] }}</td>
               </tr>
               <tr>
                 <td
                   style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Level:</strong></td>
+                  <strong>Level:</strong>
+                </td>
                 <td
-                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{
                     (() => {
                       const valor = selectedCharacter['Información del Personaje']['NivelNivel M.'].replace(/[.,\s]/g, '');
@@ -660,9 +752,10 @@ const reloadData = () => {
               <tr>
                 <td
                   style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Stats Pack:</strong></td>
+                  <strong>Stats Pack:</strong>
+                </td>
                 <td
-                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{
                     (parseInt(
                       selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
@@ -681,9 +774,10 @@ const reloadData = () => {
               <tr>
                 <td
                   style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Stats GR Full:</strong></td>
+                  <strong>Stats GR Full:</strong>
+                </td>
                 <td
-                  style="color: green; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
                   {{
                     (parseInt(
                       selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
@@ -988,7 +1082,7 @@ td {
 th {
   background-color: #f2f2f2;
   /* Color de fondo para el encabezado */
-  color: #ffffff;
+  color: #88a07e;
 }
 
 td {
@@ -1151,49 +1245,48 @@ section .signin .content .form .inputBox i {
 }
 
 
-/* combine the clock and hour hand into one element */
-.clock {
-  animation: hSpin 86400s infinite linear;
-  background-image: linear-gradient(to bottom, black, black 5px, transparent 5px), radial-gradient(circle, #000 7px, white 7px);
-  background-position: 45px 122.5px, 0 0;
-  background-repeat: no-repeat;
-  background-size: 80px 100%, 100% 100%;
-  border-radius: 50%;
-  border: 10px solid;
-  height: 250px;
-  position: relative;
-  width: 250px;
+/* Combine the clock and hour hand into one element */
+.digital-clock {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #1c1c1c; /* Color de fondo negro oscuro */
+  padding: 20px; /* Espaciado interno */
+  border-radius: 15px; /* Bordes redondeados */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6); /* Sombra para dar profundidad */
+  transition: background-color 0.3s ease; /* Transición suave para el fondo */
 }
 
-.clock:before,
-.clock:after {
-  background-repeat: no-repeat;
-  background-size: 114px 5px;
-  display: block;
-  height: 5px;
-  left: calc(50% - 120px);
-  margin-top: -2.5px;
-  position: absolute;
-  top: 50%;
-  transform-origin: 100%;
-  width: 120px;
-  content: '';
+.digital-clock:hover {
+  background-color: #333; /* Color de fondo al pasar el mouse */
 }
 
-/* second hand */
-.clock:after {
-  /* adjust timing to account for the background moving */
-  animation: sSpin 59.99s infinite linear;
-
-  background-image: linear-gradient(red, red);
+.time-display {
+  font-size: 4em; /* Tamaño de la fuente */
+  color: #00ff00; /* Color verde fosforescente */
+  font-family: 'Courier New', Courier, monospace; /* Fuente monoespaciada */
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra en el texto para más legibilidad */
+  animation: pulse 1s infinite; /* Efecto de pulso */
 }
 
-/* minute hand */
-.clock:before {
-  /* adjust timing to account for the background moving */
-  animation: mSpin 3599.95s infinite linear;
+/* Animación de pulso */
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
 
-  background-image: linear-gradient(black, black);
+/* Estilo para texto secundario o etiquetas, si es necesario */
+.secondary-text {
+  font-size: 1.2em;
+  color: #ccc; /* Color gris claro */
+  margin-top: 10px;
 }
 
 .filters {
