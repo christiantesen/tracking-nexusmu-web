@@ -299,7 +299,7 @@ const getFamilyImage = async (family: string) => {
   } else if (family === 'Duprian') {
     return (await import('@/assets/duprian.png')).default; // Carga dinámica
   }
-  return (await import('@/assets/dv.jpeg')).default; // Carga dinámica
+  return (await import('@/assets/no-data.png')).default; // Carga dinámica
 };
 
 const getClassImage = async (className: string) => {
