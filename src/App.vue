@@ -62,8 +62,8 @@ async function sendKeysToAPI() {
       userInput.value = []; // Limpiar el input si la secuencia es incorrecta
     }
   } catch (error: unknown) {
-    console.error('Error en la solicitud:', error);
-    console.log('qwe');
+    //console.error('Error en la solicitud:', error);
+    //console.log('qwe');
   } finally {
     userInput.value = []; // Limpiar la lista de teclas después de la solicitud
   }
@@ -114,7 +114,7 @@ async function handleLogin() {
       errorMessage.value = 'An unknown error occurred.'; // Mensaje genérico para otros tipos de error
     }
     //console.error('Error en la solicitud:', error);
-    console.log('asd');
+    //console.log('asd');
   }
 }
 
@@ -229,18 +229,18 @@ const fetchData = () => {
         preloadImages();
       } else {
         //console.warn('Received invalid data:', data);
-        console.log('zxc');
+        //console.log('zxc');
       }
     } catch (e) {
       //console.error('Error parsing WebSocket message:', e);
-      console.log('rty');
+      //console.log('rty');
     }
   };
 
   // Evento que se ejecuta cuando ocurre un error en la conexión WebSocket
   socket.onerror = () => {//(error) => {
     //console.error('WebSocket error:', error);
-    console.log('fgh');
+    //console.log('fgh');
     handleConnectionError();
     errorMessage.value = 'Failed to connect to WebSocket. Please try again later.';
     isLoading.value = false;
@@ -249,7 +249,7 @@ const fetchData = () => {
   // Evento que se ejecuta cuando la conexión WebSocket se cierra
   socket.onclose = () => {//(event) => {
     //console.log('WebSocket connection closed', event);
-    console.log('vbn');
+    //console.log('vbn');
     handleConnectionError();
     isLoading.value = false;
     reconnect();
@@ -299,7 +299,7 @@ const getFamilyImage = async (family: string) => {
   } else if (family === 'Duprian') {
     return (await import('@/assets/duprian.png')).default; // Carga dinámica
   }
-  return '';
+  return (await import('@/assets/dv.jpeg')).default; // Carga dinámica
 };
 
 const getClassImage = async (className: string) => {
