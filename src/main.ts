@@ -1,8 +1,13 @@
-import { createApp } from 'vue'
-import './style.css'
-import App from './App.vue'
-import { inject } from '@vercel/analytics';
- 
-inject();
+import { createApp } from 'vue';
+import { createPinia } from 'pinia';
+import App from './App.vue';
+import router from './router';
+// Removing i18n import as it's not configured yet
+import './assets/styles/main.scss';
 
-createApp(App).mount('#app')
+const app = createApp(App);
+
+app.use(createPinia())
+   .use(router)
+   // Removing i18n.use() as it's not configured
+   .mount('#app');
