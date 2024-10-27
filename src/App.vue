@@ -812,7 +812,7 @@ const reloadData = () => {
                     -1px 1px 0px black, 1px -1px 0px black;
                 "
               >
-                {{ character.guild_info?.guild || "No Guild" }}
+                {{ character.guild_info?.guild || "None" ? "No Guild" : : character.guild_info?.guild || "No Guild" }}
               </td>
               <td>
                 <div class="inputBox">
