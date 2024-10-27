@@ -412,7 +412,7 @@ const getClassImage = async (className: string) => {
   ) {
     return (await import("@/assets/gun_crusher.jpg")).default; // Carga dinámica
   } else if (
-    className === "White Wizard" ||
+    className === "Luminous Wizard" ||
     className === "Light Master" ||
     className === "Shine Wizard" ||
     className === "Shine Master" ||
@@ -663,6 +663,7 @@ const reloadData = () => {
                   color: greenyellow;
                   text-shadow: 1px 1px 0px black, -1px -1px 0px black,
                     -1px 1px 0px black, 1px -1px 0px black;
+                    position: sticky; top: 0;
                 "
               >
                 Character
@@ -672,6 +673,7 @@ const reloadData = () => {
                   color: greenyellow;
                   text-shadow: 1px 1px 0px black, -1px -1px 0px black,
                     -1px 1px 0px black, 1px -1px 0px black;
+                    position: sticky; top: 0;
                 "
               >
                 Class
@@ -681,6 +683,7 @@ const reloadData = () => {
                   color: greenyellow;
                   text-shadow: 1px 1px 0px black, -1px -1px 0px black,
                     -1px 1px 0px black, 1px -1px 0px black;
+                    position: sticky; top: 0;
                 "
               >
                 Location
@@ -690,6 +693,7 @@ const reloadData = () => {
                   color: greenyellow;
                   text-shadow: 1px 1px 0px black, -1px -1px 0px black,
                     -1px 1px 0px black, 1px -1px 0px black;
+                    position: sticky; top: 0;
                 "
               >
                 Coords
@@ -699,6 +703,7 @@ const reloadData = () => {
                   color: greenyellow;
                   text-shadow: 1px 1px 0px black, -1px -1px 0px black,
                     -1px 1px 0px black, 1px -1px 0px black;
+                    position: sticky; top: 0;
                 "
               >
                 Gens
@@ -708,6 +713,7 @@ const reloadData = () => {
                   color: greenyellow;
                   text-shadow: 1px 1px 0px black, -1px -1px 0px black,
                     -1px 1px 0px black, 1px -1px 0px black;
+                    position: sticky; top: 0;
                 "
               >
                 Guild
@@ -717,6 +723,7 @@ const reloadData = () => {
                   color: greenyellow;
                   text-shadow: 1px 1px 0px black, -1px -1px 0px black,
                     -1px 1px 0px black, 1px -1px 0px black;
+                    position: sticky; top: 0;
                 "
               >
                 Options
