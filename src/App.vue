@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue';
+import { ref, onMounted, onUnmounted, computed } from "vue";
 
 const errorMessage = ref<string | null>(null);
 //https://jubilant-fishstick-7x9jr5p6q4pcpx6g-8000.app.github.dev/
-const baseUrl_API = 'ws-rt-clock.onrender.com/';
+const baseUrl_API = "ws-rt-clock.onrender.com/";
 
 const currentTime = ref(new Date());
 let intervalId: ReturnType<typeof setInterval>;
@@ -23,9 +23,9 @@ const formattedTime = computed(() => {
   const seconds = currentTime.value.getSeconds();
   const minutes = currentTime.value.getMinutes();
   const hours = currentTime.value.getHours() % 12; // Modulo 12 para el formato de 12 horas
-  const xhours = hours.toString().padStart(2, '0');
-  const xminutes = minutes.toString().padStart(2, '0');
-  const xseconds = seconds.toString().padStart(2, '0');
+  const xhours = hours.toString().padStart(2, "0");
+  const xminutes = minutes.toString().padStart(2, "0");
+  const xseconds = seconds.toString().padStart(2, "0");
   return `${xhours}:${xminutes}:${xseconds}`; // Retorna el formato HH:MM:SS
 });
 
@@ -49,10 +49,10 @@ async function handleKeyPress(event: KeyboardEvent) {
 
 async function sendKeysToAPI() {
   try {
-    const response = await fetch('https://' + baseUrl_API + 'unlock', {
-      method: 'POST',
+    const response = await fetch("https://" + baseUrl_API + "unlock", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
       body: JSON.stringify(userInput.value),
     });
@@ -74,18 +74,18 @@ interface TokenResponse {
   token_type: string;
 }
 
-const username = ref<string>('');
-const password = ref<string>('');
+const username = ref<string>("");
+const password = ref<string>("");
 const isAuthenticated = ref<boolean>(false);
-const tokenData = ref<TokenResponse | null>(null)
-const access_token = ref<string>('');
+const tokenData = ref<TokenResponse | null>(null);
+const access_token = ref<string>("");
 
 async function handleLogin() {
   try {
-    const response = await fetch('https://' + baseUrl_API + 'token', {
-      method: 'POST',
+    const response = await fetch("https://" + baseUrl_API + "token", {
+      method: "POST",
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
+        "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
         username: username.value,
@@ -96,22 +96,23 @@ async function handleLogin() {
       isAuthenticated.value = true; // Autenticado
       tokenData.value = await response.json(); // Guardar token de acceso
       access_token.value = tokenData.value!.access_token; // Guardar token de acceso
-      errorMessage.value = ''; // Limpiar mensaje de error
+      errorMessage.value = ""; // Limpiar mensaje de error
       // Limpiar campos de entrada
-      username.value = '';
-      password.value = '';
+      username.value = "";
+      password.value = "";
       fetchData(); // Cargar datos si está autenticado
     } else {
       // Manejar errores del servidor
       const errorResponse = await response.json();
-      errorMessage.value = errorResponse.detail || 'Access Denied'; // Mostrar error específico
+      errorMessage.value = errorResponse.detail || "Access Denied"; // Mostrar error específico
     }
-  } catch (error: unknown) { // Especificar el tipo de error como unknown
+  } catch (error: unknown) {
+    // Especificar el tipo de error como unknown
     // Manejar errores de conexión
     if (error instanceof Error) {
-      errorMessage.value = 'An error occurred: ' + error.message; // Usar message de Error
+      errorMessage.value = "An error occurred: " + error.message; // Usar message de Error
     } else {
-      errorMessage.value = 'An unknown error occurred.'; // Mensaje genérico para otros tipos de error
+      errorMessage.value = "An unknown error occurred."; // Mensaje genérico para otros tipos de error
     }
     //console.error('Error en la solicitud:', error);
     //console.log('asd');
@@ -120,57 +121,47 @@ async function handleLogin() {
 
 interface Character {
   id: string;
-  'Información del Personaje': {
-    Personaje: string;
-    Clase: string;
-    País: string;  // Agregado
-    'Último Ingreso': string;  // Agregado
-    'NivelNivel M.': string;  // Agregado
-    Resets: string;  // Agregado
-    'Grand Resets': string;
-    Fuerza: string;  // Agregado
-    Agilidad: string;  // Agregado
-    Vitalidad: string;  // Agregado
-    Energía: string;  // Agregado
-    Comando: string;  // Agregado
-    Ubicación: string;
-    'Nivel PK': string;  // Agregado
-    'Fuerza (Bonus)': string;
-    'Agilidad (Bonus)': string;  // Agregado
-    'Vitalidad (Bonus)': string;  // Agregado
-    'Energía (Bonus)': string;  // Agregado
+  character_info: {
+    character: string;
+    class_name: string;
+    last_login: string;
+    level: number;
+    grand_resets: number;
+    pk_level: string;
+    location: string;
+    coords: string;
+    benefits_package: boolean;
+    full_stats: boolean;
   };
-  'Información Gens': {
-    Familia: string;
-    Rango: string;  // Agregado
-    Puntos: string;  // Agregado
+  gens_info?: {
+    family: string;
+    rank: string;
+    points: number;
   };
-  'Información del Guild': {
-    Guild: string;
-    Master: string;  // Agregado
-    Miembros: string;  // Agregado
-    Puntos: string;  // Agregado
-    Aliados: string;  // Agregado
-    Enemigos: string;  // Agregado
-    Posición: string;  // Agregado
+  guild_info?: {
+    guild: string;
+    position: string;
   };
+  timestamp: string;
 }
 
 const characters = ref<Character[]>([]);
 const classImages = ref<{ [key: string]: string }>({});
 const familyImages = ref<{ [key: string]: string }>({});
-const classImage = ref<string>('');
-const familyImage = ref<string>('');
+const classImage = ref<string>("");
+const familyImage = ref<string>("");
 
-const searchQuery = ref('');
-const selectedClass = ref('');
-const selectedFamily = ref('');
-const selectedGuild = ref('');
-const selectedMap = ref('');
+const searchQuery = ref("");
+const selectedClass = ref("");
+const selectedFamily = ref("");
+const selectedGuild = ref("");
+const selectedMap = ref("");
 const selectedCharacter = ref<Character | null>(null);
 
 const isLoading = ref(false);
-const connectionStatus = ref<'connecting' | 'connected' | 'error' | 'fallback'>('connecting');
+const connectionStatus = ref<"connecting" | "connected" | "error" | "fallback">(
+  "connecting"
+);
 let socket: WebSocket | null = null;
 let reconnectTimeout: any = null;
 let fallbackTimeout: any = null;
@@ -179,19 +170,21 @@ const FALLBACK_DURATION = 5000;
 
 const fetchData = () => {
   isLoading.value = true;
-  connectionStatus.value = 'connecting';
+  connectionStatus.value = "connecting";
 
   // Verifica si ya existe una conexión abierta y la cierra si es necesario
   if (socket && socket.readyState === WebSocket.OPEN) {
     socket.close();
   }
 
-  socket = new WebSocket(`wss://${baseUrl_API}ws/scrape/?token=${access_token.value}`);
+  socket = new WebSocket(
+    `wss://${baseUrl_API}ws/scrape/?token=${access_token.value}`
+  );
   // Evento que se ejecuta cuando se abre la conexión
   socket.onopen = () => {
-    connectionStatus.value = 'connected';
+    connectionStatus.value = "connected";
     reconnectAttempts = 0;
-    errorMessage.value = '';	// Limpiar mensaje de error
+    errorMessage.value = ""; // Limpiar mensaje de error
     if (fallbackTimeout) {
       clearTimeout(fallbackTimeout); // Clear fallback timeout on success
       fallbackTimeout = null;
@@ -202,52 +195,75 @@ const fetchData = () => {
   socket!.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
+
+      // Verifica si la data es válida y muestra en la consola
+      console.log("Received data:", data);
+
       // Validación de datos antes de usarlos
-      if (data && typeof data === 'object') {
-        
-        Object.entries(data).forEach(([id, info]: [string, any]) => {
-        const existingCharacterIndex = characters.value.findIndex(character => character.id === id);
-        
-        // Si el personaje ya existe, actualiza sus datos
-        if (existingCharacterIndex !== -1) {
-          characters.value[existingCharacterIndex] = {
+      if (data && typeof data === "object") {
+        Object.entries(data).forEach(([id, info]) => {
+          const existingCharacterIndex = characters.value.findIndex(
+            (character) => character.id === id
+          );
+
+          // Crear un nuevo objeto de personaje basado en la estructura del JSON recibido
+          const newCharacterData = {
             id,
-            'Información del Personaje': info['Información del Personaje'] || {},
-            'Información Gens': info['Información Gens'] || {},
-            'Información del Guild': info['Información del Guild'] || {},
+            character_info: {
+              character: info.character || "",
+              class_name: info.class_name || "",
+              last_login: info.last_login || "",
+              level: info.level || 0,
+              grand_resets: info.grand_resets || 0,
+              pk_level: info.pk_level || "",
+              location: info.location || "",
+              coords: info.coords || "",
+              benefits_package: info.benefits_package || false,
+              full_stats: info.full_stats || false,
+            },
+            gens_info: {
+              family: info.family || "",
+              rank: info.rank || "",
+              points: info.points || 0,
+            },
+            guild_info: {
+              guild: info.guild || "",
+              position: info.position || "",
+            },
+            timestamp: info.timestamp || "",
           };
-        } else {
-          // Si el personaje no existe, agrégalo a la lista
-          characters.value.push({
-            id,
-            'Información del Personaje': info['Información del Personaje'] || {},
-            'Información Gens': info['Información Gens'] || {},
-            'Información del Guild': info['Información del Guild'] || {},
-          });
-        }
-      });
+
+          // Si el personaje ya existe, actualiza sus datos
+          if (existingCharacterIndex !== -1) {
+            characters.value[existingCharacterIndex] = newCharacterData;
+          } else {
+            // Si el personaje no existe, agrégalo a la lista
+            characters.value.push(newCharacterData);
+          }
+        });
         preloadImages();
       } else {
-        //console.warn('Received invalid data:', data);
-        //console.log('zxc');
+        console.warn("Received invalid data:", data);
       }
     } catch (e) {
-      //console.error('Error parsing WebSocket message:', e);
-      //console.log('rty');
+      console.error("Error parsing WebSocket message:", e);
     }
   };
 
   // Evento que se ejecuta cuando ocurre un error en la conexión WebSocket
-  socket.onerror = () => {//(error) => {
+  socket.onerror = () => {
+    //(error) => {
     //console.error('WebSocket error:', error);
     //console.log('fgh');
     handleConnectionError();
-    errorMessage.value = 'Failed to connect to WebSocket. Please try again later.';
+    errorMessage.value =
+      "Failed to connect to WebSocket. Please try again later.";
     isLoading.value = false;
   };
 
   // Evento que se ejecuta cuando la conexión WebSocket se cierra
-  socket.onclose = () => {//(event) => {
+  socket.onclose = () => {
+    //(event) => {
     //console.log('WebSocket connection closed', event);
     //console.log('vbn');
     handleConnectionError();
@@ -261,222 +277,231 @@ if (isAuthenticated.value) {
 }
 
 const reconnect = () => {
-  if (reconnectAttempts < 5) {  // Limitar número de reconexiones
+  if (reconnectAttempts < 5) {
+    // Limitar número de reconexiones
     reconnectAttempts++;
     setTimeout(() => {
       //console.log(`Reconnecting... Attempt ${reconnectAttempts}`);
-      fetchData();  // Volver a intentar la conexión
-    }, 3000);  // Esperar 3 segundos antes de reconectar
+      fetchData(); // Volver a intentar la conexión
+    }, 3000); // Esperar 3 segundos antes de reconectar
   } else {
     //console.error('Max reconnection attempts reached');
-    errorMessage.value = 'Haz clic en el botón para Recargar/Actualizar los DATOS.';
+    errorMessage.value =
+      "Haz clic en el botón para Recargar/Actualizar los DATOS.";
   }
 };
 
 const openModal = async (character: Character) => {
   selectedCharacter.value = character;
-  classImage.value = await getClassImage(character['Información del Personaje'].Clase);
-  familyImage.value = await getFamilyImage(character['Información Gens'].Familia);
+  classImage.value = await getClassImage(character.character_info.class_name);
+  familyImage.value = await getFamilyImage(
+    character.gens_info ? character.gens_info.family : ""
+  );
 };
 
 const copyLocation = async (character: Character) => {
   // Persona | Ubicación | Guild
-  const message = `${character['Información del Personaje'].Personaje} | ${character['Información del Personaje'].Ubicación
-    } | ${character['Información del Guild'].Guild}`;
+  const message = `${character.character_info.character} | ${
+    character.character_info.location
+  } | ${character.character_info.coords} | ${
+    character.guild_info?.guild || "No Guild"
+  }`;
   await navigator.clipboard.writeText(message);
-  alert('Location copied to clipboard!');
+  alert("Location copied to clipboard!");
 };
 
 const closeModal = () => {
   selectedCharacter.value = null;
-  classImage.value = '';
-  familyImage.value = '';
+  classImage.value = "";
+  familyImage.value = "";
 };
 
 const getFamilyImage = async (family: string) => {
-  if (family === 'Vanert') {
-    return (await import('@/assets/vanert.png')).default; // Carga dinámica
-  } else if (family === 'Duprian') {
-    return (await import('@/assets/duprian.png')).default; // Carga dinámica
+  if (family === "Vanert") {
+    return (await import("@/assets/vanert.png")).default; // Carga dinámica
+  } else if (family === "Duprian") {
+    return (await import("@/assets/duprian.png")).default; // Carga dinámica
   }
-  return (await import('@/assets/no-data.png')).default; // Carga dinámica
+  return (await import("@/assets/no-data.png")).default; // Carga dinámica
 };
 
 const getClassImage = async (className: string) => {
   // Clases de 1ª, 2ª, 3ª y 4ª
   if (
-    className === 'Dark Knight' ||
-    className === 'Blade Knight' ||
-    className === 'Blade Master' ||
-    className === 'Dragon Knight' ||
-    className === 'Ignition Knight'
+    className === "Dark Knight" ||
+    className === "Blade Knight" ||
+    className === "Blade Master" ||
+    className === "Dragon Knight" ||
+    className === "Ignition Knight"
   ) {
-    return (await import('@/assets/dark_knight.jpg')).default; // Carga dinámica
+    return (await import("@/assets/dark_knight.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Dark Wizard' ||
-    className === 'Soul Master' ||
-    className === 'Grand Master' ||
-    className === 'Soul Wizard' ||
-    className === 'Darkness Wizard'
+    className === "Dark Wizard" ||
+    className === "Soul Master" ||
+    className === "Grand Master" ||
+    className === "Soul Wizard" ||
+    className === "Darkness Wizard"
   ) {
-    return (await import('@/assets/dark_wizard.jpg')).default; // Carga dinámica
+    return (await import("@/assets/dark_wizard.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Fairy Elf' ||
-    className === 'Muse Elf' ||
-    className === 'High Elf' ||
-    className === 'Noble Elf' ||
-    className === 'Royal Elf'
+    className === "Fairy Elf" ||
+    className === "Muse Elf" ||
+    className === "High Elf" ||
+    className === "Noble Elf" ||
+    className === "Royal Elf"
   ) {
-    return (await import('@/assets/fairy_elf.jpg')).default; // Carga dinámica
+    return (await import("@/assets/fairy_elf.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Magic Gladiator' ||
-    className === 'Duel Master' ||
-    className === 'Magic Knight' ||
-    className === 'Duple Knight'
+    className === "Magic Gladiator" ||
+    className === "Duel Master" ||
+    className === "Magic Knight" ||
+    className === "Duple Knight"
   ) {
-    return (await import('@/assets/magic_knight.jpg')).default; // Carga dinámica
+    return (await import("@/assets/magic_knight.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Dark Lord' ||
-    className === 'Lord Emperor' ||
-    className === 'Dark Emperor' ||
-    className === 'Empire Lord' ||
-    className === 'Force Emperor'
+    className === "Dark Lord" ||
+    className === "Lord Emperor" ||
+    className === "Dark Emperor" ||
+    className === "Empire Lord" ||
+    className === "Force Emperor"
   ) {
-    return (await import('@/assets/dark_lord.jpg')).default; // Carga dinámica
+    return (await import("@/assets/dark_lord.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Summoner' ||
-    className === 'Bloody Summoner' ||
-    className === 'Dimension Summoner' ||
-    className === 'Endless Summoner'
+    className === "Summoner" ||
+    className === "Bloody Summoner" ||
+    className === "Dimension Summoner" ||
+    className === "Endless Summoner"
   ) {
-    return (await import('@/assets/summoner.jpg')).default; // Carga dinámica
+    return (await import("@/assets/summoner.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Rage Fighter' ||
-    className === 'Fist Master' ||
-    className === 'Fist Blazer' ||
-    className === 'Bloody Fighter'
+    className === "Rage Fighter" ||
+    className === "Fist Master" ||
+    className === "Fist Blazer" ||
+    className === "Bloody Fighter"
   ) {
-    return (await import('@/assets/rage_fighter.jpg')).default; // Carga dinámica
+    return (await import("@/assets/rage_fighter.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Grow Lancer' ||
-    className === 'Mirage Lancer' ||
-    className === 'Shining Lancer' ||
-    className === 'Arcane Lancer'
+    className === "Grow Lancer" ||
+    className === "Mirage Lancer" ||
+    className === "Shining Lancer" ||
+    className === "Arcane Lancer"
   ) {
-    return (await import('@/assets/arcane_lancer.jpg')).default; // Carga dinámica
+    return (await import("@/assets/arcane_lancer.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Rune Mage' ||
-    className === 'Rune Spell Master' ||
-    className === 'Grand Rune Master' ||
-    className === 'Majestic Rune Wizard' ||
-    className === 'Infinity Rune Wizard'
+    className === "Rune Mage" ||
+    className === "Rune Spell Master" ||
+    className === "Grand Rune Master" ||
+    className === "Majestic Rune Wizard" ||
+    className === "Infinity Rune Wizard"
   ) {
-    return (await import('@/assets/infinity_rune_wizard.jpg')).default; // Carga dinámica
+    return (await import("@/assets/infinity_rune_wizard.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Slayer' ||
-    className === 'Royal Slayer' ||
-    className === 'Master Slayer' ||
-    className === 'Slaughterer' ||
-    className === 'Rogue Slayer'
+    className === "Slayer" ||
+    className === "Royal Slayer" ||
+    className === "Master Slayer" ||
+    className === "Slaughterer" ||
+    className === "Rogue Slayer"
   ) {
-    return (await import('@/assets/slayer.jpg')).default; // Carga dinámica
+    return (await import("@/assets/slayer.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Gun Crusher' ||
-    className === 'Gun Breaker' ||
-    className === 'Master Gun Breaker' ||
-    className === 'Heist Gun Crusher' ||
-    className === 'Magnus Gun Crusher'
+    className === "Gun Crusher" ||
+    className === "Gun Breaker" ||
+    className === "Master Gun Breaker" ||
+    className === "Heist Gun Crusher" ||
+    className === "Magnus Gun Crusher"
   ) {
-    return (await import('@/assets/gun_crusher.jpg')).default; // Carga dinámica
+    return (await import("@/assets/gun_crusher.jpg")).default; // Carga dinámica
   } else if (
-    className === 'White Wizard' ||
-    className === 'Light Master' ||
-    className === 'Shine Wizard' ||
-    className === 'Shine Master' ||
-    className === 'Glory Wizard'
+    className === "White Wizard" ||
+    className === "Light Master" ||
+    className === "Shine Wizard" ||
+    className === "Shine Master" ||
+    className === "Glory Wizard"
   ) {
-    return (await import('@/assets/glory_wizard.jpg')).default; // Carga dinámica
+    return (await import("@/assets/glory_wizard.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Mage' ||
-    className === 'Wo Mage' ||
-    className === 'Arch Mage' ||
-    className === 'Mystic Mage' ||
-    className === 'Battle Mage'
+    className === "Mage" ||
+    className === "Wo Mage" ||
+    className === "Arch Mage" ||
+    className === "Mystic Mage" ||
+    className === "Battle Mage"
   ) {
-    return (await import('@/assets/battle_mage.jpg')).default; // Carga dinámica
+    return (await import("@/assets/battle_mage.jpg")).default; // Carga dinámica
   } else if (
-    className === 'Illusion Knight' ||
-    className === 'Mirage Knight' ||
-    className === 'Illusion Master' ||
-    className === 'Mystic Knight' ||
-    className === 'Phantom Pain Knight'
+    className === "Illusion Knight" ||
+    className === "Mirage Knight" ||
+    className === "Illusion Master" ||
+    className === "Mystic Knight" ||
+    className === "Phantom Pain Knight"
   ) {
-    return (await import('@/assets/phantom_pain_knight.jpg')).default; // Carga dinámica
+    return (await import("@/assets/phantom_pain_knight.jpg")).default; // Carga dinámica
   }
 
   // Valor por defecto si no se encuentra una clase
-  return (await import('@/assets/default_class_image.png')).default; // Imagen por defecto
+  return (await import("@/assets/default_class_image.png")).default; // Imagen por defecto
 };
 
 const uniqueClasses = computed(() => {
   const classes = new Set(
-    characters.value.map((char) => char['Información del Personaje'].Clase)
+    characters.value.map((char) => char.character_info.class_name)
   );
-  return ['', ...Array.from(classes)];
+  return ["", ...Array.from(classes)];
 });
 
 const uniqueFamilies = computed(() => {
   const families = new Set(
-    characters.value.map((char) => char['Información Gens'].Familia)
+    characters.value.map((char) => char.gens_info?.family)
   );
-  return ['', ...Array.from(families)];
+  return ["", ...Array.from(families)];
 });
 
 const uniqueGuilds = computed(() => {
   const guilds = new Set(
-    characters.value.map((char) => char['Información del Guild'].Guild)
+    characters.value.map((char) => char.guild_info?.guild)
   );
-  return ['', ...Array.from(guilds)];
+  return ["", ...Array.from(guilds)];
 });
 
 const uniqueMaps = computed(() => {
   const maps = new Set(
-    characters.value.map((char) => {
-      const ubicacion = char['Información del Personaje'].Ubicación;
-      const mapName = ubicacion.replace(/\s*\(.*\)$/, '').trim();
-      return mapName;
-    })
+    characters.value.map((char) => char.character_info.location)
   );
-  return ['', ...Array.from(maps)];
+  return ["", ...Array.from(maps)];
 });
 
 const filteredCharacters = computed(() => {
   return characters.value.filter((char) => {
     const matchesSearch =
-      Object.values(char['Información del Personaje']).some((value) =>
+      Object.values(char.character_info).some((value) =>
         value.toString().toLowerCase().includes(searchQuery.value.toLowerCase())
       ) ||
-      char['Información Gens'].Familia.toLowerCase().includes(
-        searchQuery.value.toLowerCase()
-      ) ||
-      char['Información del Guild'].Guild.toLowerCase().includes(
-        searchQuery.value.toLowerCase()
-      );
+      char.gens_info?.family
+        .toLowerCase()
+        .includes(searchQuery.value.toLowerCase()) ||
+      char.guild_info?.guild
+        .toLowerCase()
+        .includes(searchQuery.value.toLowerCase());
 
     const matchesClass =
-      selectedClass.value === '' ||
-      char['Información del Personaje'].Clase === selectedClass.value;
+      selectedClass.value === "" ||
+      char.character_info.class_name === selectedClass.value;
     const matchesFamily =
-      selectedFamily.value === '' ||
-      char['Información Gens'].Familia === selectedFamily.value;
+      selectedFamily.value === "" ||
+      char.gens_info?.family === selectedFamily.value;
     const matchesGuild =
-      selectedGuild.value === '' ||
-      char['Información del Guild'].Guild === selectedGuild.value;
+      selectedGuild.value === "" ||
+      char.guild_info?.guild === selectedGuild.value;
     const matchesMap =
-      selectedMap.value === '' ||
-      char['Información del Personaje'].Ubicación.includes(selectedMap.value);
+      selectedMap.value === "" ||
+      char.character_info.location === selectedMap.value;
 
-    return matchesSearch && matchesClass && matchesFamily && matchesGuild && matchesMap;
+    return (
+      matchesSearch &&
+      matchesClass &&
+      matchesFamily &&
+      matchesGuild &&
+      matchesMap
+    );
   });
 });
 
@@ -485,8 +510,8 @@ const preloadImages = async () => {
   const familyCache = new Set<string>();
 
   for (const character of characters.value) {
-    const className = character['Información del Personaje'].Clase;
-    const familyName = character['Información Gens'].Familia;
+    const className = character.character_info.class_name;
+    const familyName = character.gens_info?.family;
 
     // Cargar las imágenes si no están en caché
     if (className && !classCache.has(className)) {
@@ -502,9 +527,10 @@ const preloadImages = async () => {
 };
 
 const handleConnectionError = () => {
-  connectionStatus.value = 'error';
+  connectionStatus.value = "error";
   reconnectAttempts++;
-  errorMessage.value = 'Haz clic en el botón para Recargar/Actualizar los DATOS.';
+  errorMessage.value =
+    "Haz clic en el botón para Recargar/Actualizar los DATOS.";
   scheduleReconnect();
 
   if (!fallbackTimeout) {
@@ -515,7 +541,7 @@ const handleConnectionError = () => {
 };
 
 const handleFallback = () => {
-  connectionStatus.value = 'fallback';
+  connectionStatus.value = "fallback";
   characters.value = [];
   if (reconnectTimeout) {
     clearTimeout(reconnectTimeout);
@@ -537,12 +563,12 @@ const scheduleReconnect = () => {
 
 onMounted(() => {
   intervalId = setInterval(updateTime, 1000); // Llama a updateTime cada segundo
-  window.addEventListener('keydown', handleKeyPress);
+  window.addEventListener("keydown", handleKeyPress);
 });
 
 onUnmounted(() => {
   clearInterval(intervalId); // Limpia el intervalo si fuera necesario
-  window.removeEventListener('keydown', handleKeyPress);
+  window.removeEventListener("keydown", handleKeyPress);
   if (socket) {
     socket.close(); // Close socket on unmount
   }
@@ -561,7 +587,8 @@ const reloadData = () => {
 
 <template>
   <div class="digital-clock" v-if="!isKeys">
-    <div class="time-display">{{ formattedTime }}</div> <!-- Muestra el tiempo formateado -->
+    <div class="time-display">{{ formattedTime }}</div>
+    <!-- Muestra el tiempo formateado -->
   </div>
   <div v-else>
     <div class="content" v-if="!isAuthenticated">
@@ -581,24 +608,36 @@ const reloadData = () => {
     </div>
 
     <div v-else class="container">
-      <h1 style="color: greenyellow;">Tracking Table</h1>
+      <h1 style="color: greenyellow">Tracking Table</h1>
       <div class="inputBox">
-        <input type="submit" @click="reloadData" value=" 🔃 ">
+        <input type="submit" @click="reloadData" value=" 🔃 " />
       </div>
       <div v-if="errorMessage" class="error-message">
         {{ errorMessage }}
       </div>
       <div v-if="characters.length > 0" class="filters">
-        <input v-model="searchQuery" placeholder="Search..." class="search-input" />
+        <input
+          v-model="searchQuery"
+          placeholder="Search..."
+          class="search-input"
+        />
         <select v-model="selectedClass" class="filter-select">
           <option value="">All Classes</option>
-          <option v-for="className in uniqueClasses" :key="className" :value="className">
+          <option
+            v-for="className in uniqueClasses"
+            :key="className"
+            :value="className"
+          >
             {{ className }}
           </option>
         </select>
         <select v-model="selectedFamily" class="filter-select">
           <option value="">All Gens</option>
-          <option v-for="family in uniqueFamilies" :key="family" :value="family">
+          <option
+            v-for="family in uniqueFamilies"
+            :key="family"
+            :value="family"
+          >
             {{ family }}
           </option>
         </select>
@@ -620,52 +659,148 @@ const reloadData = () => {
           <thead>
             <tr>
               <th
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                Character</th>
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                Character
+              </th>
               <th
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                Class</th>
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                Class
+              </th>
               <th
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                Location</th>
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                Location
+              </th>
               <th
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                Gens</th>
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                Coords
+              </th>
               <th
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                Guild</th>
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                Gens
+              </th>
               <th
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                Options</th>
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                Guild
+              </th>
+              <th
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                Options
+              </th>
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(character) in filteredCharacters" :key="character.id">
+            <tr v-for="character in filteredCharacters" :key="character.id">
               <td
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                {{ character['Información del Personaje'].Personaje }}</td>
-              <td
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                <img :src="classImages[character['Información del Personaje'].Clase]" alt="Class Image"
-                  v-if="classImages[character['Información del Personaje'].Clase]" />
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                {{ character.character_info.character }}
               </td>
               <td
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                {{ character['Información del Personaje'].Ubicación }}</td>
-              <td
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                <img :src="familyImages[character['Información Gens'].Familia]" alt="Family Image"
-                  v-if="familyImages[character['Información Gens'].Familia]" />
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                <img
+                  :src="classImages[character.character_info.class_name]"
+                  alt="Class Image"
+                  v-if="classImages[character.character_info.class_name]"
+                />
               </td>
               <td
-                style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                {{ character['Información del Guild'].Guild }}</td>
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                {{ character.character_info.location }}
+              </td>
+              <td
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                {{ character.character_info.coords }}
+              </td>
+              <td
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                <img
+                  :src="familyImages[character.gens_info?.family]"
+                  alt="Family Image"
+                  v-if="familyImages[character.gens_info?.family]" style="height: 50px; width: 50px;"
+                />
+              </td>
+              <td
+                style="
+                  color: greenyellow;
+                  text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                    -1px 1px 0px black, 1px -1px 0px black;
+                "
+              >
+                {{ character.guild_info?.guild || "No Guild" }}
+              </td>
               <td>
                 <div class="inputBox">
-                  <input type="submit" @click="openModal(character)" value=" 🕵️ ">
+                  <input
+                    type="submit"
+                    @click="openModal(character)"
+                    value=" 🕵️ "
+                  />
                 </div>
                 <div class="inputBox">
-                  <input type="submit" @click="copyLocation(character)" value=" 🚩 ">
+                  <input
+                    type="submit"
+                    @click="copyLocation(character)"
+                    value=" 🚩 "
+                  />
                 </div>
               </td>
             </tr>
@@ -682,104 +817,163 @@ const reloadData = () => {
         <div class="modal-content">
           <div class="character-info">
             <img :src="familyImage" alt="Family Image" class="family-image" />
-            <h1 style="color: greenyellow;">{{ selectedCharacter['Información del Personaje'].Personaje }}</h1>
+            <h1 style="color: greenyellow">
+              {{ selectedCharacter.character_info.character }}
+            </h1>
             <img :src="classImage" alt="Class Image" class="class-image" />
           </div>
           <table class="table-container">
             <tbody>
               <tr>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
                   <strong>Guild:</strong>
                 </td>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  {{ selectedCharacter['Información del Guild'].Guild }}
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  {{ selectedCharacter.guild_info?.guild === "None" ? "No Guild" : selectedCharacter.guild_info?.guild || "No Guild" }}
                 </td>
               </tr>
               <tr>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Location:</strong>
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  <strong>GeoLocation:</strong>
                 </td>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  {{ selectedCharacter['Información del Personaje'].Ubicación }}</td>
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  {{ selectedCharacter.character_info.location }}
+                </td>
               </tr>
               <tr>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  <strong>Coords:</strong>
+                </td>
+                <td
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  {{ selectedCharacter.character_info.coords }}
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
                   <strong>Log Login:</strong>
                 </td>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  {{ selectedCharacter['Información del Personaje']['Último Ingreso'] }}</td>
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  {{ selectedCharacter.character_info.last_login }}
+                </td>
               </tr>
               <tr>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
                   <strong>Level:</strong>
                 </td>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  {{ selectedCharacter.character_info.level }}
+                </td>
+              </tr>
+              <tr>
+                <td
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  <strong>Benefits Package:</strong>
+                </td>
+                <td
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
                   {{
-                    (() => {
-                      const valor = selectedCharacter['Información del Personaje']['NivelNivel M.'].replace(/[.,\s]/g, '');
-                      const parte1 = parseInt(valor.slice(0, 3), 10); // Primeros 3 dígitos
-                      const parte2 = parseInt(valor.slice(3), 10); // Últimos dígitos
-                      return parte1 + parte2;
-                    })()
+                    selectedCharacter.character_info.benefits_package
+                      ? "Yes"
+                      : "No"
                   }}
                 </td>
               </tr>
               <tr>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Stats Pack:</strong>
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
+                  <strong>GR Full Stats:</strong>
                 </td>
                 <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
+                  style="
+                    color: greenyellow;
+                    text-shadow: 1px 1px 0px black, -1px -1px 0px black,
+                      -1px 1px 0px black, 1px -1px 0px black;
+                  "
+                >
                   {{
-                    (parseInt(
-                      selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
-                    ) + parseInt(
-                      selectedCharacter['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
-                    ) + parseInt(
-                      selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
-                    ) + parseInt(
-                      selectedCharacter['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
-                    )) > 6000
-                      ? 'Sí'
-                      : 'No'
-                  }}
-                </td>
-              </tr>
-              <tr>
-                <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  <strong>Stats GR Full:</strong>
-                </td>
-                <td
-                  style="color: greenyellow; text-shadow: 1px 1px 0px black, -1px -1px 0px black, -1px 1px 0px black, 1px -1px 0px black;">
-                  {{
-                    (parseInt(
-                      selectedCharacter['Información del Personaje']['Fuerza (Bonus)'].replace(/[.,]/g, '')
-                    ) + parseInt(
-                      selectedCharacter['Información del Personaje']['Agilidad (Bonus)'].replace(/[.,]/g, '')
-                    ) + parseInt(
-                      selectedCharacter['Información del Personaje']['Vitalidad (Bonus)'].replace(/[.,]/g, '')
-                    ) + parseInt(
-                      selectedCharacter['Información del Personaje']['Energía (Bonus)'].replace(/[.,]/g, '')
-                    )) >= 6000
-                      ? 'Sí'
-                      : 'No'
+                    selectedCharacter.character_info.full_stats ? "Yes" : "No"
                   }}
                 </td>
               </tr>
             </tbody>
           </table>
           <div class="inputBox">
-            <input type="submit" @click="closeModal" value=" ❌ ">
+            <input type="submit" @click="closeModal" value=" ❌ " />
           </div>
         </div>
       </div>
@@ -788,11 +982,11 @@ const reloadData = () => {
 </template>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap");
 
 .table-container {
   max-height: 55vh;
-  max-width: 80vh;
+  max-width: 100vh;
   /* Ajusta la altura máxima según sea necesario */
   overflow-y: auto;
   /* Habilita el desplazamiento vertical */
@@ -808,7 +1002,7 @@ const reloadData = () => {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: 'Quicksand', sans-serif;
+  font-family: "Quicksand", sans-serif;
 }
 
 /* Variables de color para tema claro y oscuro */
@@ -846,7 +1040,7 @@ body {
   color: var(--text-color);
   transition: background-color 0.3s, color 0.3s;
   /* Transiciones suaves */
-  font-family: 'Arial', sans-serif;
+  font-family: "Arial", sans-serif;
   /* Fuente más moderna */
   line-height: 1.6;
   /* Mejora la legibilidad */
@@ -870,7 +1064,7 @@ section {
 }
 
 section::before {
-  content: '';
+  content: "";
   position: absolute;
   width: 100%;
   height: 100%;
@@ -967,8 +1161,8 @@ section .signin .content .form .inputBox i {
   pointer-events: none;
 }
 
-.signin .content .form .inputBox input:focus~i,
-.signin .content .form .inputBox input:valid~i {
+.signin .content .form .inputBox input:focus ~ i,
+.signin .content .form .inputBox input:valid ~ i {
   transform: translateY(-7.5px);
   font-size: 0.8em;
   color: #fff;
@@ -1132,9 +1326,9 @@ h3 {
 
 .family-image,
 .class-image {
-  width: 50px;
+  width: auto;
   height: auto;
-  margin: 0 10px;
+  margin: 10px;
 }
 
 .close-button {
@@ -1180,7 +1374,6 @@ h3 {
   /* Color de texto más oscuro */
 }
 
-
 .error-message {
   color: red;
   margin-bottom: 20px;
@@ -1220,13 +1413,12 @@ section .signin .content .form .inputBox i {
   pointer-events: none;
 }
 
-.signin .content .form .inputBox input:focus~i,
-.signin .content .form .inputBox input:valid~i {
+.signin .content .form .inputBox input:focus ~ i,
+.signin .content .form .inputBox input:valid ~ i {
   transform: translateY(-7.5px);
   font-size: 0.8em;
   color: #fff;
 }
-
 
 /* Combine the clock and hour hand into one element */
 .digital-clock {
@@ -1247,7 +1439,7 @@ section .signin .content .form .inputBox i {
 .time-display {
   font-size: 4em; /* Tamaño de la fuente */
   color: #00ff00; /* Color verde fosforescente */
-  font-family: 'Courier New', Courier, monospace; /* Fuente monoespaciada */
+  font-family: "Courier New", Courier, monospace; /* Fuente monoespaciada */
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Sombra en el texto para más legibilidad */
   animation: pulse 1s infinite; /* Efecto de pulso */
 }
@@ -1273,7 +1465,7 @@ section .signin .content .form .inputBox i {
 }
 
 .filters {
-  width: 80vh;
+  width: 100vh;
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
