@@ -771,7 +771,7 @@ const reloadData = () => {
                 <img
                   :src="classImages[character.character_info.class_name]"
                   alt="Class Image"
-                  v-if="classImages[character.character_info.class_name]"
+                  v-if="classImages[character.character_info.class_name] " style="height: 50px; width: 50px;"
                 />
               </td>
               <td
@@ -843,11 +843,11 @@ const reloadData = () => {
       <div v-if="selectedCharacter" class="modal" @click.self="closeModal">
         <div class="modal-content">
           <div class="character-info">
-            <img :src="familyImage" alt="Family Image" class="family-image" />
+            <img :src="familyImage" alt="Family Image" class="family-image" style="height: 50px; width: 50px;" />
             <h1 style="color: greenyellow">
               {{ selectedCharacter.character_info.character }}
             </h1>
-            <img :src="classImage" alt="Class Image" class="class-image" />
+            <img :src="classImage" alt="Class Image" class="class-image" style="height: 50px; width: 50px;" />
           </div>
           <table class="table-container">
             <tbody>
