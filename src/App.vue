@@ -170,6 +170,7 @@ const familyImages = ref<{ [key: string]: string }>({});
 const classImage = ref<string>("");
 const familyImage = ref<string>("");
 
+const cachedCharacters = ref<Character[]>([]); // Nuevo ref para el caché
 const searchQuery = ref("");
 const selectedClass = ref("");
 const selectedFamily = ref("");
@@ -204,6 +205,12 @@ const fetchData = () => {
     connectionStatus.value = "connected";
     reconnectAttempts = 0;
     errorMessage.value = ""; // Limpiar mensaje de error
+
+    // Restaura los personajes del caché si es necesario
+    if (cachedCharacters.value.length > 0) {
+      characters.value = cachedCharacters.value; // Restaura del caché
+    }
+
     if (fallbackTimeout) {
       clearTimeout(fallbackTimeout); // Clear fallback timeout on success
       fallbackTimeout = null;
@@ -261,6 +268,8 @@ const fetchData = () => {
             characters.value.push(newCharacterData);
           }
         });
+        // Actualiza el caché con la nueva data
+        cachedCharacters.value = characters.value;
         preloadImages();
       } else {
         console.warn("Received invalid data:", data);
