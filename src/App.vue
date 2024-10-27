@@ -145,6 +145,25 @@ interface Character {
   timestamp: string;
 }
 
+interface CharacterInfo {
+  character: string;
+  class_name: string;
+  last_login: string;
+  level: number;
+  grand_resets: number;
+  pk_level: string;
+  location: string;
+  coords: string;
+  benefits_package: boolean;
+  full_stats: boolean;
+  family: string;
+  rank: string;
+  points: number;
+  guild: string;
+  position: string;
+  timestamp: string;
+}
+
 const characters = ref<Character[]>([]);
 const classImages = ref<{ [key: string]: string }>({});
 const familyImages = ref<{ [key: string]: string }>({});
@@ -202,6 +221,7 @@ const fetchData = () => {
       // Validación de datos antes de usarlos
       if (data && typeof data === "object") {
         Object.entries(data).forEach(([id, info]) => {
+          const characterInfo = info as CharacterInfo;
           const existingCharacterIndex = characters.value.findIndex(
             (character) => character.id === id
           );
@@ -210,27 +230,27 @@ const fetchData = () => {
           const newCharacterData = {
             id,
             character_info: {
-              character: info.character || "",
-              class_name: info.class_name || "",
-              last_login: info.last_login || "",
-              level: info.level || 0,
-              grand_resets: info.grand_resets || 0,
-              pk_level: info.pk_level || "",
-              location: info.location || "",
-              coords: info.coords || "",
-              benefits_package: info.benefits_package || false,
-              full_stats: info.full_stats || false,
+              character: characterInfo.character || "",
+              class_name: characterInfo.class_name || "",
+              last_login: characterInfo.last_login || "",
+              level: characterInfo.level || 0,
+              grand_resets: characterInfo.grand_resets || 0,
+              pk_level: characterInfo.pk_level || "",
+              location: characterInfo.location || "",
+              coords: characterInfo.coords || "",
+              benefits_package: characterInfo.benefits_package || false,
+              full_stats: characterInfo.full_stats || false,
             },
             gens_info: {
-              family: info.family || "",
-              rank: info.rank || "",
-              points: info.points || 0,
+              family: characterInfo.family || "",
+              rank: characterInfo.rank || "",
+              points: characterInfo.points || 0,
             },
             guild_info: {
-              guild: info.guild || "",
-              position: info.position || "",
+              guild: characterInfo.guild || "",
+              position: characterInfo.position || "",
             },
-            timestamp: info.timestamp || "",
+            timestamp: characterInfo.timestamp || "",
           };
 
           // Si el personaje ya existe, actualiza sus datos
@@ -780,9 +800,9 @@ const reloadData = () => {
                 "
               >
                 <img
-                  :src="familyImages[character.gens_info?.family]"
+                  :src="familyImages[character.gens_info?.family || '']"
                   alt="Family Image"
-                  v-if="familyImages[character.gens_info?.family]" style="height: 50px; width: 50px;"
+                  v-if="familyImages[character.gens_info?.family || '']" style="height: 50px; width: 50px;"
                 />
               </td>
               <td
