@@ -888,7 +888,7 @@ const reloadData = () => {
                       -1px 1px 0px black, 1px -1px 0px black;
                   "
                 >
-                  <strong>GeoLocation:</strong>
+                  <strong>Location:</strong>
                 </td>
                 <td
                   style="
